@@ -26,6 +26,12 @@ class HyperGraph():
 
         return result
 
+    def getVertices(self):
+        return self.vertices
+
+    def getEdges(self):
+        return self.edges
+
     def addVertex(self, vertex:Vertex):
         self.vertices.add(vertex)
 
@@ -56,7 +62,6 @@ class HyperGraph():
             for vertex_dict in hg_dict['vertices']:
                 vertex = Vertex(vertex_dict['id'])
                 self.addVertex(vertex)
-
             
 
     def isConnected(self):

@@ -24,11 +24,11 @@ def loadSampleHyperGraph():
     return h
 
 graph_directory = Path('Graphs')
-h = HyperGraph()
-h.loadJson(open(graph_directory / 'SampleOverbasedGraph.json', 'r'))
+# h = HyperGraph()
+# h.loadJson(open(graph_directory / 'SampleOverbasedGraph.json', 'r'))
 
-print(h)
-print(h.isSContractable())
+# print(h)
+# print(h.isSContractable())
 
 import sys
 
@@ -36,13 +36,16 @@ from PyQt5.Qt import QApplication
 from Graphics.MainWindow import MainWindow
 from Graphics.CanvasWidget import HyperGraphCanvas
 
+from Hypergraph import HyperGraph
+
 if __name__ == '__main__':
     
     app = QApplication(sys.argv)
-    h = HyperGraphCanvas()
+    h = HyperGraph()
     # h.addVertex(Vertex("Sample Vertex"))
     h.loadJson(open(graph_directory / 'SampleOverbasedGraph.json', 'r'))
-    w = MainWindow(h)
+
+    w = MainWindow(HyperGraphCanvas(h))
     
     w.show()
     sys.exit(app.exec_())

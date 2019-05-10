@@ -1,21 +1,46 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from Graphics.CanvasVertex import CanvasVertex
-
+from Vertex import Vertex
 from HyperEdge import HyperEdge
 
-class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
-    
-    def __init__(self, *vertices, **kwargs):
-        QtWidgets.QGraphicsPathItem.__init__(self)
-        if 'edge' in kwargs:
-            edge = kwargs.pop('edge')
-            HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in edge.getVertices()])
-        else:
-            HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in vertices], **kwargs)
+from Graphics.CanvasVertex import CanvasVertex
 
-        self.default_pen = QtGui.QPen()
-        self.setPen(self.default_pen)
+class CanvasHyperEdge(QtWidgets.QGraphicsPathItem):
+    
+    def __init__(self, he:HyperEdge, vertices:set):
+        super().__init__()
+
+        self.hyperedge = he
+        self.convex_vertices = { x for x in vertices if x in self.hyperedge.getVertices() }
+
+    def convexVertexBelongsToEdge(self, vertex:CanvasVertex):
+        return vertex in self.convex_vertices
+
+    def vertexBelongsToEdge(self, vertex:Vertex):
+        return vertex in self.hyperedge.getVertices()
+
+    def grahamConvex(self) -> list:
+        if not self.hyperedge.isHyperedge():
+            raise Exception("Convex can be calculated for edges with degree > 2!")
+        
+        print([point.pos().y for point in self.convex_vertices])
+
+    def getVertices(self) -> set:
+        return self.hyperedge.getVertices()
+
+    def __str__(self) -> str:
+        return str(self.hyperedge)
+
+
+        # QtWidgets.QGraphicsPathItem.__init__(self)
+        # if 'edge' in kwargs:
+        #     edge = kwargs.pop('edge')
+        #     HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in edge.getVertices()])
+        # else:
+        #     HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in vertices], **kwargs)
+
+        # self.default_pen = QtGui.QPen()
+        # self.setPen(self.default_pen)
 
         # if self.getDegree() == 2:
         #     vertices = list(self.getVertices())

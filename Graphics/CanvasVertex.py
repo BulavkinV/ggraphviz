@@ -2,16 +2,16 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from Vertex import Vertex
 
-class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
+class CanvasVertex(QtWidgets.QGraphicsItem):
     """
-        Consists of two QGraphicsItem: Text and Ellipse
     """
 
     # TODO 
 
-    def __init__(self, arg, parent = None):
-        Vertex.__init__(self, arg)
-        QtWidgets.QGraphicsItem.__init__(self, parent=parent)
+    def __init__(self, vertex:Vertex):
+        super().__init__()
+
+        self.vertex = vertex
 
         self.vertex_width = 10.
         self.vertex_height = 10.
@@ -25,7 +25,7 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         self.ellipse = QtWidgets.QGraphicsEllipseItem(self.vertex_ellipse_rect, self)
         self.ellipse.setBrush(self.ellipse_default_brush)
 
-        self.text = QtWidgets.QGraphicsSimpleTextItem(self.id, self)
+        self.text = QtWidgets.QGraphicsSimpleTextItem(self.vertex.getId(), self)
         self.text.setPos(
             self.ellipse.pos() + 
             QtCore.QPointF(
