@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QGraphicsView
 
-from Graphics.CanvasHyperGraph import HyperGraphCanvas
+from Graphics.HypergraphCanvas import HyperGraphCanvas
 
-class CanvasWidget(QtWidgets.QGraphicsView):
+class CanvasWidget(QGraphicsView):
     
     def __init__(self, scene:HyperGraphCanvas):
         super().__init__(scene)

@@ -1,7 +1,12 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 
+from Vertex import Vertex
+from HyperEdge import HyperEdge
+
 from Graphics.CanvasVertex import CanvasVertex
 
+class CanvasHyperEdge(QtWidgets.QGraphicsPathItem):
+    
 from HyperEdge import HyperEdge
 
 class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
