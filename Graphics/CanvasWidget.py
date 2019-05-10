@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 
-from CanvasHyperGraph import HyperGraphCanvas
+from Graphics.CanvasHyperGraph import HyperGraphCanvas
 
 class CanvasWidget(QtWidgets.QGraphicsView):
     
