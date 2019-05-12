@@ -62,8 +62,11 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                 edge.draw()
                 self.addItem(edge)
                 support_convex = edge.getSupportConvex()
-                # for item in support_convex:
-                #     self.addItem(item)
+                
+                # for i, item in enumerate(support_convex):
+                #     vertex = CanvasVertex(id=str(i)+ '!')
+                #     vertex.setPos(item)
+                #     self.addItem(vertex)
         
 
     

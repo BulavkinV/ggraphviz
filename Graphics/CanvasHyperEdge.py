@@ -1,4 +1,4 @@
-from math import pi, sin, cos
+from math import pi, sin, cos, isclose
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
@@ -26,7 +26,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             HyperEdge.__init__(self, *vertices)
             # HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in vertices], **kwargs)
         
-        self.real_point_gap = 30.
+        self.real_point_gap = 50.
 
         self.default_pen = QtGui.QPen()
         self.setPen(self.default_pen)
@@ -108,33 +108,96 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         return stack 
 
-    def getSupportConvex(self):
-        if not self.convex:
-            raise Exception()
+    def inflateConvex(self, convex:list, gap:float) -> list:
+        convex = [ (convex[i-1], convex[i], convex[(i+1) % len(convex)]) for i in range(len(convex)) ]
 
-        convex = [ (self.convex[i-1], self.convex[i], self.convex[(i+1) % len(self.convex)]) for i in range(len(self.convex)) ]
-        support_convex = []
+        result_convex = []
         for prev, vertex, next in convex:
             angles = []
             for v in (prev, next):
-                a = vertex.polar_angle(v)
+                a = CanvasVertex.polar_angle_pos(vertex, v)
+                # a = vertex.polar_angle(v)
                 angles.append(a)
             angle = sum(angles) /2.
             # TODO redo
-            support_vertex = CanvasVertex(id = vertex.getId() + '\'')
-            support_vertex.setPos(
-                vertex.pos() + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
+            # new_vertex = CanvasVertex(id = vertex.getId() + '\'')
+            new_vertex = QtCore.QPointF(
+                vertex + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
             )
-            if prev.vector_product(vertex, support_vertex) < 0.:
+            if CanvasVertex.vector_product_pos(prev, vertex, new_vertex) < 0.:
+            # prev.vector_product(vertex, new_vertex) < 0.:
                 angle += pi
-                support_vertex.setPos(
-                    vertex.pos() + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
+                new_vertex = QtCore.QPointF(
+                    vertex + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
                 )
-            support_convex.append(support_vertex.pos())
+            result_convex.append(new_vertex)
 
-        self.support_convex = support_convex
+        return result_convex
 
-        return support_convex
+    def intersectionOfSegmentAndCircle(self, center:QtCore.QPointF, radius:float, p1:QtCore.QPointF, p2:QtCore.QPointF):
+        x0, y0 = center.x(), center.y()
+        x1, y1 = p1.x(), p1.y()
+        x2, y2 = p2.x(), p2.y()
+        r = radius
+
+        intercect1 = ((x0 - x2)*(x1 - x2) + (y0 - y2)*(y1 - y2) - (r**2*((x1 - x2)**2 + (y1 - y2)**2) - (-(x2*y0) - x0*y1 + x2*y1 + x1*(y0 - y2) + x0*y2)**2)**.5) / ((x1 - x2)**2 + (y1 - y2)**2)
+        intercect2 = ((x0 - x2)*(x1 - x2) + (y0 - y2)*(y1 - y2) + (r**2*((x1 - x2)**2 + (y1 - y2)**2) - (-(x2*y0) - x0*y1 + x2*y1 + x1*(y0 - y2) + x0*y2)**2)**.5) / ((x1 - x2)**2 + (y1 - y2)**2)
+
+        if isclose(intercect1, 1., abs_tol=1e-5) or isclose(intercect1, 0., abs_tol=1e-5):
+            intercect = intercect2
+        else:
+            intercect = intercect1
+
+        # intercect = max([intercect1, intercect2])
+        # if abs(intercect) > 1.:
+        #     print("Warning!")
+        # intercect1 = (p1 + p2) * intercect1
+        # intercect2 = (p1 + p2) * intercect2
+        intercect = (p1 * intercect + (1.-intercect) * p2) 
+
+        return intercect
+
+        # if intercect1 in [p1, p2]:
+        #     return intercect2
+        # else:
+        #     return intercect1 
+
+    def getSupportConvex(self):
+        if not self.convex:
+            raise Exception()  
+
+        self.support_convex = self.inflateConvex([v.pos() for v in self.convex], self.real_point_gap)
+        
+        convex = [ (self.support_convex[i], self.support_convex[(i+1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
+        # distances = [CanvasVertex.distance_pos(v1, v2) for v1, v2 in convex]
+        # self.arc_radius = 2.*max(distances)
+
+        # quad_points = []
+        # for v1, v2 in convex:
+        #     quad_vertex = (v1 + v2)/2.
+        #     quad_points.append(quad_vertex)
+        # self.quad_points = self.inflateConvex(quad_points, 20.)
+
+        # cubic1 = []
+        # cubic2 = []
+        # for v1, v2 in convex:
+        #     c1 = (v1 + v2)/4.
+        #     c2 = 3.*(v1 + v2)/4.
+        #     cubic1.append(c1)
+        #     cubic2.append(c2)
+        
+        # self.cubic_points = zip(self.inflateConvex(cubic1, 10.), self.inflateConvex(cubic2, 10.))
+
+        arc_points = []
+        convex = [ (self.support_convex[i-1], self.support_convex[i], self.support_convex[(i+1) % len(self.support_convex)]) for i in range(len(self.support_convex)) ]
+        for i, (prev, current, next) in enumerate(convex):
+            arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, prev, current))
+            arc_points.append(current)
+            arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, current, next))
+
+        self.arc_points = arc_points
+        
+        return self.arc_points
 
 
     def draw(self):
@@ -143,6 +206,33 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         path = QtGui.QPainterPath()
 
+        path.moveTo(self.arc_points[0])
+        for center, arc_final, next in zip(self.arc_points[1::3], self.arc_points[2::3], self.arc_points[3::3]):
+            path.quadTo(center, arc_final)
+            path.lineTo(next)
+
+        path.quadTo(self.arc_points[-2], self.arc_points[-1])
+
+        path.closeSubpath()
+
+
+        # quad
+        # path.moveTo(self.support_convex[0])
+        # for vertex, quad in zip(self.support_convex[1:], self.quad_points[:-1]):
+        #     # path.lineTo(vertex)
+        #     path.quadTo(quad, vertex)
+        # path.quadTo(self.quad_points[-1], self.support_convex[0])
+        # path.closeSubpath()
+
+        # cubic
+        # path.moveTo(self.support_convex[0])
+        # cubic1, cubic2 = zip(*self.cubic_points)
+        # for vertex, c1, c2 in zip(self.support_convex[1:], cubic1[:-1], cubic2[:-1]):
+        #     # path.lineTo(vertex)
+        #     path.cubicTo(c1, c2, vertex)
+        # path.cubicTo(cubic1[-1], cubic2[-1], self.support_convex[0])
+        # path.closeSubpath()
+
         path.moveTo(self.support_convex[0])
         for vertex in self.support_convex[1:]:
             path.lineTo(vertex)
@@ -150,7 +240,6 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         path.closeSubpath()
 
         self.setPath(path)
-
 
         return path
             

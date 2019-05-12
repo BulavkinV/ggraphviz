@@ -68,6 +68,23 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         vertex = other.pos() - self.pos()
         return sqrt(vertex.x()**2. + vertex.y()**2.)
 
+    @staticmethod
+    def polar_angle_pos(p1:QtCore.QPointF, p2:QtCore.QPointF):
+        vertex = p2 - p1
+        return atan2(vertex.y(), vertex.x())
+
+    @staticmethod
+    def vector_product_pos(p1:QtCore.QPointF, p2:QtCore.QPointF, p3:QtCore.QPointF):
+        u = p2 - p1
+        v = p3 - p2
+
+        return u.x() * v.y() - u.y() * v.x()
+
+    @staticmethod
+    def distance_pos(p1:QtCore.QPointF, p2:QtCore.QPointF):
+        vertex = p2 - p1
+        return sqrt(vertex.x()**2. + vertex.y()**2.)
+
     # def paint(self, painter, option, widget) -> None:
     #     """
     #         TODO type annotations
