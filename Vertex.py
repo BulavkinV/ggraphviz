@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 class Vertex:
 
-    def __init__(self, arg, **kwargs):
-        if isinstance(arg, Vertex):
-            self.id = arg.id
+    def __init__(self, id:str=None, other:Vertex=None):
+        if other:
+            self.id = other.id
+        elif id:
+            self.id = str(id)
         else:
-            self.id = str(arg)
+            raise Exception("ID or other must be provided")
 
     def getId(self):
         return self.id

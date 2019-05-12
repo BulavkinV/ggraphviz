@@ -11,11 +11,17 @@ class HyperEdgeCrossingVariants(Enum):
 
 class HyperEdge:
 
-    def __init__(self, *vertices):
-        if not vertices:
+    def __init__(self, *vertices, other:HyperEdge=None):
+        if other:
+            self._copy_constructor(other)
+        elif vertices:
+            self.vertices = set(vertices)
+        else:
             raise ValueError("Vertices set can't be empty")
+        
 
-        self.vertices = set(vertices)
+    def _copy_constructor(self, other:HyperEdge):
+        self.vertices = other.vertices
 
     def __str__(self):
         result = "Edge (%s)" % (','.join(map(str, self.vertices)))

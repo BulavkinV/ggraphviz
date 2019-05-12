@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import namedtuple
 import json
 
@@ -11,10 +12,13 @@ class HyperGraph():
         TODO: desiarization from JSON
     """
 
-    def __init__(self, vertices:set=set(), edges:list=[]):
+    def __init__(self, vertices:set=set(), edges:list=[], other:HyperGraph=None):
         # TODO check arguments
-        self.vertices = vertices
-        self.edges = edges
+        if other:
+            self._copy_constructor(other)
+        else:
+            self.vertices = vertices
+            self.edges = edges
 
     def __str__(self):
         result = "Hypergraph:\n"
@@ -26,13 +30,20 @@ class HyperGraph():
 
         return result
 
+
+    def _copy_constructor(self, other:HyperGraph):
+        self.vertices = other.getVertices()
+        self.edges = other.getEdges()
+
     def getVertices(self):
         return self.vertices
 
     def getEdges(self):
         return self.edges
 
-    def addVertex(self, vertex:Vertex):
+    def addVertex(self, vertex:Vertex, edge:HyperEdge=None):
+        if edge:
+            self.edges[self.edges.index(edge)].addVertex(vertex)
         self.vertices.add(vertex)
 
     def addVertices(self, vertices:set):

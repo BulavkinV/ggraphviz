@@ -1,21 +1,28 @@
+from __future__ import annotations
+from math import atan2, sqrt, atan
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 from Vertex import Vertex
 
-class CanvasVertex(QtWidgets.QGraphicsItem):
+class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
     """
     """
 
     # TODO 
 
-    def __init__(self, vertex:Vertex):
-        super().__init__()
+    def __init__(self, id:str=None, other:CanvasVertex=None):
+        
+        if other:
+            self._copy_constructor(other)
+        else:
+            self.id = id
 
-        self.vertex = vertex
+        QtWidgets.QGraphicsItem.__init__(self)
 
         self.vertex_width = 10.
         self.vertex_height = 10.
-        self.vertex_text_gap = 0.
+        self.vertex_text_gap = 3.
 
         self.vertex_ellipse_rect = QtCore.QRectF(
             -self.vertex_width/2., -self.vertex_height/2,
@@ -25,7 +32,7 @@ class CanvasVertex(QtWidgets.QGraphicsItem):
         self.ellipse = QtWidgets.QGraphicsEllipseItem(self.vertex_ellipse_rect, self)
         self.ellipse.setBrush(self.ellipse_default_brush)
 
-        self.text = QtWidgets.QGraphicsSimpleTextItem(self.vertex.getId(), self)
+        self.text = QtWidgets.QGraphicsSimpleTextItem(self.getId(), self)
         self.text.setPos(
             self.ellipse.pos() + 
             QtCore.QPointF(
@@ -39,8 +46,27 @@ class CanvasVertex(QtWidgets.QGraphicsItem):
         # self.y_axis = QtWidgets.QGraphicsLineItem(0., -100., 0., 100., self)
         # QtWidgets.QGraphicsRectItem(self.childrenBoundingRect(), self)
 
+    def _copy_constructor(self, other:CanvasVertex):
+        Vertex.__init__(self, other=other)
+
     def boundingRect(self):
         return self.childrenBoundingRect()
+
+    def polar_angle(self, other:CanvasVertex):
+        # TODO comparsion of vector compositions must be used
+        vertex = other.pos() - self.pos()
+        return atan2(vertex.y(), vertex.x())
+        # return atan(vertex.y()/vertex.x())
+
+    def vector_product(self, p1:CanvasVertex, p2:CanvasVertex):
+        u = p1.pos() - self.pos()
+        v = p2.pos() - p1.pos()
+
+        return u.x() * v.y() - u.y() * v.x()
+
+    def distance(self, other:CanvasVertex):
+        vertex = other.pos() - self.pos()
+        return sqrt(vertex.x()**2. + vertex.y()**2.)
 
     # def paint(self, painter, option, widget) -> None:
     #     """

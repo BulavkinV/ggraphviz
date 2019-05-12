@@ -34,7 +34,7 @@ import sys
 
 from PyQt5.Qt import QApplication
 from Graphics.MainWindow import MainWindow
-from Graphics.CanvasWidget import HyperGraphCanvas
+from Graphics.CanvasHyperGraph import CanvasHyperGraph
 
 from Hypergraph import HyperGraph
 
@@ -43,9 +43,9 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     h = HyperGraph()
     # h.addVertex(Vertex("Sample Vertex"))
-    h.loadJson(open(graph_directory / 'SampleOverbasedGraph.json', 'r'))
+    h.loadJson(open(graph_directory / 'OneEdgeDegree10.json', 'r'))
 
-    w = MainWindow(HyperGraphCanvas(h))
+    w = MainWindow(CanvasHyperGraph(h))
     
     w.show()
     sys.exit(app.exec_())
