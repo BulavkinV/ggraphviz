@@ -31,18 +31,54 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.default_pen = QtGui.QPen()
         self.setPen(self.default_pen)
 
-        # if self.getDegree() == 2:
-        #     vertices = list(self.getVertices())
-        #     vertices[1].setPos(50., 0.)                
-        #     path = QtGui.QPainterPath(vertices[0].pos())
-        #     path.lineTo(vertices[1].pos())
-        #     self.setPath(path)
+        self.hovered_pen = QtGui.QPen()
+        self.hovered_pen.setColor(QtCore.Qt.red)
 
-    def setNewVertices(self, vertices:set):
+        self.hovered_brush = QtGui.QBrush()
+        self.hovered_brush.setColor(QtCore.Qt.red)
+
+        self.default_brush = QtGui.QBrush()
+        # self.score = 0
+        self.setBrush(self.hovered_brush)
+
+        self.support_convex = []
+        self.setAcceptHoverEvents(True)
+
+    def deleteVertex(self, vertex:CanvasVertex) -> None:
+        HyperEdge.deleteVertex(self, vertex)
+        if self.getDegree() > 1:
+            self.grahamConvex()
+            self.draw()
+            self.update()
+
+    def equalPositions(self, other_vertices:set) -> bool:
+        for v1 in self.vertices:
+            for v2 in other_vertices:
+                if v1 == v2:
+                    if v1.pos() != v2.pos():
+                        return False
+
+        return True
+
+    def updateVertices(self, vertices:set):
+        if vertices == self.vertices and self.equalPositions(vertices):
+            return
+
         self.vertices = {v for v in vertices if v in self.vertices}
+        self.grahamConvex()
 
-    def grahamConvex(self, all_vertices:set):
-        self.setNewVertices(all_vertices)
+    def changeVertex(self, vertex:CanvasVertex, change_convex=True) -> None:
+        self.vertices -= {vertex}
+        self.vertices |= {vertex}
+
+        if change_convex:
+            self.grahamConvex()
+            if True:
+                self.draw()
+
+    def grahamConvex(self):
+        if not self.isHyperedge():
+            return
 
         vertices = list(self.vertices)
         bottom_points = [vertices[0]]
@@ -199,23 +235,34 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         
         return self.arc_points
 
-
-    def draw(self):
-        if not self.support_convex:
-            raise Exception()
-
+    def draw(self, support_convex:bool=False):
         path = QtGui.QPainterPath()
 
-        path.moveTo(self.arc_points[0])
-        for center, arc_final, next in zip(self.arc_points[1::3], self.arc_points[2::3], self.arc_points[3::3]):
-            path.quadTo(center, arc_final)
-            path.lineTo(next)
+        if self.getDegree() == 2:
+            vertices = list(self.getVertices())
+            path.moveTo(vertices[0].pos())
+            path.lineTo(vertices[1].pos())
+        else:
+            if not self.support_convex:
+                self.grahamConvex()
 
-        path.quadTo(self.arc_points[-2], self.arc_points[-1])
+            path.moveTo(self.arc_points[0])
+            for center, arc_final, next in zip(self.arc_points[1::3], self.arc_points[2::3], self.arc_points[3::3]):
+                path.quadTo(center, arc_final)
+                path.lineTo(next)
 
-        path.closeSubpath()
+            path.quadTo(self.arc_points[-2], self.arc_points[-1])
+            path.closeSubpath()
 
+            if support_convex:
+                path.moveTo(self.support_convex[0])
+                for vertex in self.support_convex[1:]:
+                    path.lineTo(vertex)
+                path.closeSubpath()
 
+        self.setPath(path)
+
+        return path
         # quad
         # path.moveTo(self.support_convex[0])
         # for vertex, quad in zip(self.support_convex[1:], self.quad_points[:-1]):
@@ -233,13 +280,44 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         # path.cubicTo(cubic1[-1], cubic2[-1], self.support_convex[0])
         # path.closeSubpath()
 
-        path.moveTo(self.support_convex[0])
-        for vertex in self.support_convex[1:]:
-            path.lineTo(vertex)
-            # path.quadTo()
-        path.closeSubpath()
+    #QT reimplimentations
+    # def boundingRect(self):
+        
+    #     if self.isSimpleEdge():
+    #         pass
 
-        self.setPath(path)
+    #     return QtWidgets.QGraphicsPathItem.boundingRect(self)
 
-        return path
-            
+    def setSelected(self, selected:bool):
+        QtWidgets.QGraphicsPathItem.setSelected(self, selected)
+        if selected:
+            self.setPen(self.hovered_pen)
+        else:
+            self.setPen(self.default_pen)
+        
+        self.update()
+
+    # mouse evnets
+    # def hoverEnterEvent(self, mouseEvent:QtWidgets.QGraphicsSceneHoverEvent):
+    #     self.setSelected(True)
+    #     QtWidgets.QGraphicsPathItem.hoverEnterEvent(self, mouseEvent)
+
+    # def hoverLeaveEvent(self, mouseEvent:QtWidgets.QGraphicsSceneHoverEvent):
+    #     self.setSelected(False)
+    #     QtWidgets.QGraphicsPathItem.hoverLeaveEvent(self, mouseEvent)
+
+
+    # DEPRECATED
+    def calculateCenter(self):
+        vertices_pos = [v.pos() for v in self.vertices]
+        self.center = vertices_pos[0]
+        for vertex in vertices_pos[1:]:
+            self.center += vertex
+        
+        return self.center
+
+    def setScore(self, score:int):
+        self.score = score
+    
+    def getScore(self):
+        return self.score

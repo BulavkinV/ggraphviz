@@ -1,0 +1,10 @@
+{
+    "edges": [
+        {
+            "vertices": [
+                {"id": "start"},
+                {"id": "finish"}
+            ]
+        }
+    ]
+}

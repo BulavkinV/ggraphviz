@@ -1,5 +1,6 @@
 import cProfile
 from pathlib import Path
+import logging
 
 from Hypergraph import HyperGraph
 from HyperEdge import HyperEdge
@@ -39,13 +40,15 @@ from Graphics.CanvasHyperGraph import CanvasHyperGraph
 from Hypergraph import HyperGraph
 
 if __name__ == '__main__':
+
+    logging.basicConfig(level=logging.DEBUG)
     
     app = QApplication(sys.argv)
     h = HyperGraph()
     # h.addVertex(Vertex("Sample Vertex"))
     h.loadJson(open(graph_directory / 'SampleGraph1.json', 'r'))
 
-    w = MainWindow(CanvasHyperGraph(h))
-    
+    ch = CanvasHyperGraph(h)
+    w = MainWindow(ch)
     w.show()
     sys.exit(app.exec_())

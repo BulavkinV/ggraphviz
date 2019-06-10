@@ -64,6 +64,7 @@ class HyperGraph():
                 vertices = []
                 for vertex_dict in edge_dict['vertices']:
                     vertex = Vertex(vertex_dict['id'])
+                    # TODO проверять на повторяющиеся вершины
                     vertices.append(vertex)
                 edge = HyperEdge(*vertices)
                 self.addEdge(edge)

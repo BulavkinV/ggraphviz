@@ -10,15 +10,15 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
     """
 
     # TODO 
-
     def __init__(self, id:str=None, other:CanvasVertex=None):
         
         if other:
             self._copy_constructor(other)
         else:
             self.id = id
-
-        QtWidgets.QGraphicsItem.__init__(self)
+            QtWidgets.QGraphicsItem.__init__(self)
+        
+        self.placed = False
 
         self.vertex_width = 10.
         self.vertex_height = 10.
@@ -27,12 +27,15 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         self.vertex_ellipse_rect = QtCore.QRectF(
             -self.vertex_width/2., -self.vertex_height/2,
             self.vertex_width, self.vertex_height
-        )
+        ) 
         self.ellipse_default_brush = QtGui.QBrush(QtCore.Qt.black)
+        self.ellipse_selected_brush = QtGui.QBrush(QtCore.Qt.red)
         self.ellipse = QtWidgets.QGraphicsEllipseItem(self.vertex_ellipse_rect, self)
         self.ellipse.setBrush(self.ellipse_default_brush)
 
-        self.text = QtWidgets.QGraphicsSimpleTextItem(self.getId(), self)
+        self.text = QtWidgets.QGraphicsTextItem(self.getId(), self)
+        # self.text.setTextInteractionFlags(QtCore.Qt.TextEditable)
+        # self.text.document().contentsChanged.connect(self.changeIdFromText)
         self.text.setPos(
             self.ellipse.pos() + 
             QtCore.QPointF(
@@ -40,7 +43,7 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
                 - self.text.boundingRect().height() - self.vertex_height/2. - self.vertex_text_gap
             )
         )
-
+        
         # TODO debug
         # self.x_axis = QtWidgets.QGraphicsLineItem(-100., 0., 100., 0., self)
         # self.y_axis = QtWidgets.QGraphicsLineItem(0., -100., 0., 100., self)
@@ -48,10 +51,43 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
 
     def _copy_constructor(self, other:CanvasVertex):
         Vertex.__init__(self, other=other)
+        QtWidgets.QGraphicsItem.__init__(self)
+        if hasattr(other, 'setPos'):
+            self.setPos(other.pos())
 
+    def isPlaced(self):
+        return self.placed
+
+    def setPos(self, *args, **kwargs):
+        self.placed = True
+        QtWidgets.QGraphicsItem.setPos(self, *args, **kwargs)
+        # self.text.setText(self.id + ' ' + str([self.pos().x(), self.pos().y()]))
+
+    def unsetPos(self):
+        self.placed = False
+        QtWidgets.QGraphicsItem.setPos(self, QtCore.QPointF(0., 0.))
+
+    def changeIdFromText(self) -> None:
+        self.id = self.text.toPlainText()
+
+    def getText(self):
+        return self.text
+
+
+    # QT functions
     def boundingRect(self):
         return self.childrenBoundingRect()
 
+    def setSelected(self, selected:bool) -> None:
+        QtWidgets.QGraphicsItem.setSelected(self, selected)
+        if selected:
+            self.ellipse.setBrush(self.ellipse_selected_brush)
+        else:
+            self.ellipse.setBrush(self.ellipse_default_brush)
+
+        self.ellipse.update()
+
+    # math
     def polar_angle(self, other:CanvasVertex):
         # TODO comparsion of vector compositions must be used
         vertex = other.pos() - self.pos()
@@ -85,22 +121,8 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         vertex = p2 - p1
         return sqrt(vertex.x()**2. + vertex.y()**2.)
 
-    # def paint(self, painter, option, widget) -> None:
-    #     """
-    #         TODO type annotations
-    #     """
-
-    #     self.ellipse.paint(painter, option, widget)
-    #     self.text.paint(painter, option, widget)
 
 
-
-
-        
-        # if 'width' in kwargs and 'height' in kwargs:
-        #     pass
-        # elif 'rect' in kwargs:
-        #     pass
 
 
         

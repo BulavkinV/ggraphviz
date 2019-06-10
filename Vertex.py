@@ -13,6 +13,10 @@ class Vertex:
     def getId(self):
         return self.id
 
+    def setId(self, new_id:str) -> None:
+        new_id = new_id.strip()
+        self.id = new_id
+
     def __eq__(self, other):
         return self.id == other.id
 

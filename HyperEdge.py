@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enum import Enum, auto
+from uuid import uuid4
 
 from Vertex import Vertex
 
@@ -12,6 +13,7 @@ class HyperEdgeCrossingVariants(Enum):
 class HyperEdge:
 
     def __init__(self, *vertices, other:HyperEdge=None):
+        self.id = str(uuid4())
         if other:
             self._copy_constructor(other)
         elif vertices:
@@ -24,8 +26,17 @@ class HyperEdge:
         self.vertices = other.vertices
 
     def __str__(self):
-        result = "Edge (%s)" % (','.join(map(str, self.vertices)))
+        result = "(%s)" % (','.join(map(str, self.vertices)))
         return result
+
+    def __eq__(self, other:HyperEdge):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def getId(self):
+        return self.id
 
     def getVertices(self):
         return self.vertices
@@ -45,6 +56,12 @@ class HyperEdge:
         else:
             return HyperEdgeCrossingVariants.CROSSING
 
+    def getCrossingDegree(self, other:HyperEdge) -> int:
+        return len(self.vertices & other.vertices)
+
+    def getChildIds(self):
+        return {x.getId() for x in self.vertices}
+
     def isHyperedge(self):
         return self.getDegree() > 2
 
@@ -56,6 +73,14 @@ class HyperEdge:
 
     def deleteVertex(self, vertex:Vertex):
         self.vertices -= {vertex}
+
+    def renameVertex(self, old_id:str, new_id:str) -> None:
+        # TODO make it work considering that self.vertices is set
+        for vertex in self.vertices:
+            if vertex.getId() == old_id:
+                vertex.setId(new_id)
+                return 
+
 
     def replaceVertex(self, old:Vertex, new:Vertex):
         self.deleteVertex(old)
