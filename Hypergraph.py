@@ -12,13 +12,13 @@ class HyperGraph():
         TODO: desiarization from JSON
     """
 
-    def __init__(self, vertices:set=set(), edges:list=[], other:HyperGraph=None):
+    def __init__(self, vertices:set=None, edges:list=None, other:HyperGraph=None):
         # TODO check arguments
         if other:
             self._copy_constructor(other)
         else:
-            self.vertices = vertices
-            self.edges = edges
+            self.vertices = vertices if vertices else set()
+            self.edges = edges if edges else []
 
     def __str__(self):
         result = "Hypergraph:\n"

@@ -585,7 +585,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             self.addVertex(vertex, edge)
 
     def addEdge(self, edge:CanvasHyperEdge):
-        edge = CanvasHyperEdge(edge=edge)
+        edge = CanvasHyperEdge(other=edge)
         super().addEdge(edge)
         # self.drawEdge(edge)
 
