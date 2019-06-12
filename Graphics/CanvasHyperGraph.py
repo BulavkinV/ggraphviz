@@ -292,6 +292,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     self.selected_vertex = None
                     self.selected_vertex_edges = []
                     self.setMode(SceneModes.NONE)
+                else:
+                    break
                 
     def mouseDoubleClickEvent(self, mouseEvent:QtWidgets.QGraphicsSceneMouseEvent) -> None:
         if self.mode is SceneModes.NONE:
@@ -620,6 +622,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
     def removeEdgeSlot(self):
         self.setMode(SceneModes.REMOVE_EDGE)
+
 
     # DEPRECATED
     def calculateCrossingMatrix(self):

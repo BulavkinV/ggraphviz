@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QToolBar, QStatusBar
 
+from Graphics.CanvasHyperGraph import CanvasHyperGraph
 from Graphics.CanvasWidget import CanvasWidget
 
 class MainWindow(QMainWindow):
     
-    def __init__(self, hg_canvas):
+    def __init__(self, hg_canvas: CanvasHyperGraph):
         self.minimum_size = (800, 600)
 
         super().__init__()
@@ -25,19 +26,31 @@ class MainWindow(QMainWindow):
         self.setStatusBar(status_bar)
 
 
-        
     def createToolbar(self) -> QToolBar:
         toolbar = QToolBar()
+
+        action = toolbar.addAction('load_hg')
+        action.triggered.connect(self.centralWidget().loadHypergraphSlot)
+
+        action = toolbar.addAction('save_hg')
+        action.triggered.connect(self.centralWidget().saveHypergraphSlot)
+
+        action = toolbar.addAction('new_scene')
+        action.triggered.connect(self.centralWidget().resetSceneSlot)
+
+        toolbar.addSeparator()
+
         action = toolbar.addAction('add_vertex')
-        action.triggered.connect(self.centralWidget().scene().addVertexSlot)
+        action.triggered.connect(self.centralWidget().addVertexForCurrentSceneSlot)
         
         action = toolbar.addAction('remove_vertex')
-        action.triggered.connect(self.centralWidget().scene().removeVertexSlot)
+        action.triggered.connect(self.centralWidget().removeVertexForCurrentSceneSlot)
 
         action = toolbar.addAction('add_edge')
-        action.triggered.connect(self.centralWidget().scene().addEdgeSlot)
+        action.triggered.connect(self.centralWidget().addEdgeForCurrentSceneSlot)
 
         action = toolbar.addAction('remove_edge')
-        action.triggered.connect(self.centralWidget().scene().removeEdgeSlot)
+        action.triggered.connect(self.centralWidget().removeEdgeForCurrentSceneSlot)
 
         return toolbar
+

@@ -81,9 +81,6 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         if not self.isHyperedge():
             return
 
-        print("Vertices: {}".format(' '.join(map(str, self.vertices))))
-        print("Type of vertices:{}".format(type(self.vertices)))
-
         vertices = list(self.vertices)
         bottom_points = [vertices[0]]
         for vertex in vertices[1:]:
