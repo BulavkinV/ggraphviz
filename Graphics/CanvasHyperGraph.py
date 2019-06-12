@@ -276,6 +276,12 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                 text, success = QtWidgets.QInputDialog.getText(mouseEvent.widget(), "Создание новой вершины",
                                     "Введите имя вершины:")
                 if success:
+                    if not text:
+                        msgBox = QtWidgets.QMessageBox(mouseEvent.widget())
+                        msgBox.setText("Невозможно создать вершину с пустым именем!")
+                        msgBox.exec()
+                        success = False
+                        continue
                     new_vertex = CanvasVertex(id=text)
                     if new_vertex in self.vertices:
                         msgBox = QtWidgets.QMessageBox(mouseEvent.widget())
