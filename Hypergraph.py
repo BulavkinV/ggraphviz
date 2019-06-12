@@ -1,6 +1,7 @@
 from __future__ import annotations
 from collections import namedtuple
 import json
+from pathlib import Path
 
 from Vertex import Vertex
 from HyperEdge import HyperEdge
@@ -74,6 +75,28 @@ class HyperGraph():
             for vertex_dict in hg_dict['vertices']:
                 vertex = Vertex(vertex_dict['id'])
                 self.addVertex(vertex)
+
+    def saveJson(self, file_path:Path):
+        result = {}
+
+        if self.edges:
+            result['edges'] = []
+
+        not_isolated_vertices = set()
+        for edge in self.edges:
+            vertices_list = []
+            for vertex in edge.getVertices():
+                not_isolated_vertices.add(vertex)
+                vertices_list.append({'id': vertex.getId()})
+            result['edges'].append({'vertices': vertices_list})
+
+        isolated_vertices = self.vertices - not_isolated_vertices
+        if isolated_vertices:
+            result['vertices'] = [{'id': v.getId()} for v in isolated_vertices]
+
+        #file_path.open("w")
+        file_path.write_text(json.dumps(result, indent=4))
+        #file_path.close()
             
 
     def isConnected(self):

@@ -148,7 +148,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                 friendly_vertices = friendly_vertices_set
 
                 # hostile_centers = {e for e in [edge.getId() for edge in self.edges] if e not in edges_ids}
-                hostile_vertices = self.vertices - friendly_vertices # set(self.verticesVersusEdges.keys()) - friendly_vertices
+                hostile_vertices = self.vertices - friendly_vertices - {vertex} # set(self.verticesVersusEdges.keys()) - friendly_vertices
 
                 friendly_vertices = friendly_vertices_set - {vertex}
 

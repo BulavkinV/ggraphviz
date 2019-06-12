@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -23,10 +25,20 @@ class CanvasWidget(QGraphicsView):
         file.close()
 
         new_hg = CanvasHyperGraph(new_hg)
+
         self.setScene(new_hg)
 
     def saveHypergraphSlot(self):
-        print("Let's try to save something!")
+        filename = QFileDialog.getSaveFileName(self, caption="Сохранить гиперграф",
+                                               filter="Json files (*.json);; All Files (*)")
+
+        if not filename[0]:
+            return
+
+        self.scene().saveJson(Path(filename[0]))
+        # data = self.field.generateJson()
+        # with open(filename[0], 'w') as jsonfile:
+        #     jsonfile.write(data)
 
     def resetSceneSlot(self):
         self.setScene(CanvasHyperGraph())
