@@ -81,7 +81,8 @@ class HyperEdge:
                 vertex.setId(new_id)
                 return
 
-
+    def compareByVertices(self, other:HyperEdge) -> bool:
+        return  self.getVertices() == other.getVertices()
 
     def replaceVertex(self, old:Vertex, new:Vertex):
         self.deleteVertex(old)

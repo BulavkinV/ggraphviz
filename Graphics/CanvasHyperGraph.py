@@ -63,6 +63,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         # self.edges = [CanvasHyperEdge(x, self.vertices) for x in hg.getEdges()]
 
+        self.calculateEdgesMultiplicity()
         self.updateEdges()
         self.drawEdges()
 
@@ -78,6 +79,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             scene_side = square**.5
             self.setSceneRect(0., 0., scene_side, scene_side)
 
+    # mode operations
     def setMode(self, mode:SceneModes) -> None:
         self.mode = mode
 
@@ -352,7 +354,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
     def keyPressEvent(self, keyEvent:QtGui.QKeyEvent) -> None:
         if self.getMode() is SceneModes.ADD_NEW_EDGE:
             if keyEvent.key() in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return] :
-                if len(self.selected_vertices) >= 2:
+                if len(self.selected_vertices) >= 1:
                     self.addNewEdge(self.selected_vertices)
                     for vertex in self.selected_vertices:
                         vertex.setSelected(False)
@@ -412,6 +414,23 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             if not open and len(closed) != len(self.edges):
                 # TODO take best vertex from closed to open
                 pass
+
+    def calculateEdgesMultiplicity(self):
+        self.same_edges = {edge.getId():[] for edge in self.edges}
+        for edge in self.edges:
+            list_of_same_edges = [e.getId() for e in self.edges if edge.getVertices() == e.getVertices() and edge != e]
+            self.same_edges[edge.getId()] = list_of_same_edges
+
+        excluded_edges_ids = []
+        for edge_id, same_edges_ids in self.same_edges.items():
+            if same_edges_ids and edge_id not in excluded_edges_ids:
+                factor = 2
+                for increase_multiplicity_edge_id in same_edges_ids:
+                    increase_multiplicity_edge = self.getEdgeById(increase_multiplicity_edge_id)
+                    increase_multiplicity_edge.setMultiplicity(factor)
+                    factor += 1
+                    excluded_edges_ids.append(increase_multiplicity_edge_id)
+            excluded_edges_ids.append(edge_id)
 
     def regularPolygon(self, n:int, start_point:QtCore.QPointF):
         points = [start_point]
@@ -547,14 +566,40 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         
     def addNewEdge(self, vertices:set) -> None:
         edge = CanvasHyperEdge(*vertices)
+
+        # checking for same_edges
+        same_edges = []
+        for e in self.edges:
+            if edge.compareByVertices(e):
+                same_edges.append(e.getId())
+        if same_edges:
+            edge.setMultiplicity(len(same_edges) + 1)
+            for same_edge_id in same_edges:
+                self.same_edges[same_edge_id].append(edge.getId())
+
+        self.same_edges[edge.getId()] = same_edges
+
         self.edges.append(edge)
         for vertex in list(vertices):
             self.verticesVersusEdges[vertex.getId()].append(edge.getId())
+
         edge.draw()
         self.addItem(edge)
 
     def removeEdge(self, edge:CanvasHyperEdge) -> None:
         edge_id = edge.getId()
+
+        # check for same edges
+        if self.same_edges[edge_id]:
+            multiplicity = edge.getMultiplicity()
+            for other_same_edge_id in self.same_edges[edge_id]:
+                other_same_edge = self.getEdgeById(other_same_edge_id)
+                if other_same_edge.getMultiplicity() > multiplicity:
+                    other_same_edge.setMultiplicity(other_same_edge.getMultiplicity() - 1)
+                self.same_edges[other_same_edge_id].remove(edge_id)
+
+        self.same_edges.pop(edge_id)
+
         for l in self.verticesVersusEdges.values():
                 if edge_id in l:
                     l.remove(edge_id)

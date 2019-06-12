@@ -43,6 +43,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         self.support_convex = []
         self.setAcceptHoverEvents(True)
+        self.multiplicity = 1
 
     def deleteVertex(self, vertex:CanvasVertex) -> None:
         HyperEdge.deleteVertex(self, vertex)
@@ -76,6 +77,16 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             self.grahamConvex()
             if True:
                 self.draw()
+
+    def getMultiplicity(self) -> int:
+        return  self.multiplicity
+
+    def setMultiplicity(self, m:int) -> None:
+        if self.multiplicity != m:
+            self.multiplicity = m
+            self.real_point_gap = 50. + 50.*(self.multiplicity - 1.)
+            self.grahamConvex()
+            self.draw()
 
     def grahamConvex(self):
         if not self.isHyperedge():
@@ -159,13 +170,13 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             # TODO redo
             # new_vertex = CanvasVertex(id = vertex.getId() + '\'')
             new_vertex = QtCore.QPointF(
-                vertex + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
+                vertex + QtCore.QPointF(gap*cos(angle), gap*sin(angle))
             )
             if CanvasVertex.vector_product_pos(prev, vertex, new_vertex) < 0.:
             # prev.vector_product(vertex, new_vertex) < 0.:
                 angle += pi
                 new_vertex = QtCore.QPointF(
-                    vertex + QtCore.QPointF(self.real_point_gap*cos(angle), self.real_point_gap*sin(angle))
+                    vertex + QtCore.QPointF(gap*cos(angle), gap*sin(angle))
                 )
             result_convex.append(new_vertex)
 
@@ -206,6 +217,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         if not self.isHyperedge():
             raise Exception("Edge {} is not a hyperedge to create support convex for it!".format(self.getId())) 
 
+
         self.support_convex = self.inflateConvex([v.pos() for v in self.convex], self.real_point_gap)
         
         convex = [ (self.support_convex[i], self.support_convex[(i+1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
@@ -242,10 +254,36 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
     def draw(self, support_convex:bool=False):
         path = QtGui.QPainterPath()
 
-        if self.getDegree() == 2:
+        if self.getDegree() == 1:
+            point = list(self.getVertices())[0].pos()
+            start_angle = -pi / 4.
+            c1 = point + QtCore.QPointF(self.real_point_gap*cos(start_angle), self.real_point_gap*sin(start_angle))
+            start_angle -= pi /2.
+            c2 = point + QtCore.QPointF(self.real_point_gap * cos(start_angle), self.real_point_gap * sin(start_angle))
+            help_point = point + QtCore.QPointF(0, -self.real_point_gap)
+            path.moveTo(point)
+            path.quadTo(c1, help_point)
+            path.quadTo(c2, point)
+
+        elif self.getDegree() == 2:
             vertices = list(self.getVertices())
-            path.moveTo(vertices[0].pos())
-            path.lineTo(vertices[1].pos())
+            if self.multiplicity > 1:
+                if vertices[0].pos().y() < vertices[1].pos().y():
+                    p_start = vertices[0].pos()
+                    p_finish = vertices[1].pos()
+                else:
+                    p_start = vertices[1].pos()
+                    p_finish = vertices[0].pos()
+
+                distance = CanvasVertex.distance_pos(p_start, p_finish)
+                base_angle = CanvasVertex.polar_angle_pos(p_start, p_finish)
+                base_angle += pi/2.*(-1)**self.multiplicity
+                c = (p_start + p_finish) / 2. + QtCore.QPointF(distance/2.*self.multiplicity/2.*cos(base_angle), distance/2.*self.multiplicity/2.*sin(base_angle))
+                path.moveTo(p_start)
+                path.quadTo(c, p_finish)
+            else:
+                path.moveTo(vertices[0].pos())
+                path.lineTo(vertices[1].pos())
         else:
             if not self.support_convex:
                 self.grahamConvex()
