@@ -79,7 +79,8 @@ class HyperEdge:
         for vertex in self.vertices:
             if vertex.getId() == old_id:
                 vertex.setId(new_id)
-                return 
+                return
+
 
 
     def replaceVertex(self, old:Vertex, new:Vertex):

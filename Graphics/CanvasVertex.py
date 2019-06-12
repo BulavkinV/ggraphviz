@@ -55,8 +55,18 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         if hasattr(other, 'setPos'):
             self.setPos(other.pos())
 
+    def __eq__(self, other:CanvasVertex) -> bool:
+        return Vertex.__eq__(self, other)
+
+    def  __hash__(self):
+        return Vertex.__hash__(self)
+
     def isPlaced(self):
         return self.placed
+
+    def setId(self, new_id:str) -> None:
+        Vertex.setId(self, new_id)
+        self.text.setPlainText(new_id)
 
     def setPos(self, *args, **kwargs):
         self.placed = True

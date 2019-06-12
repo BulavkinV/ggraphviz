@@ -46,10 +46,11 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
     def deleteVertex(self, vertex:CanvasVertex) -> None:
         HyperEdge.deleteVertex(self, vertex)
-        if self.getDegree() > 1:
+        if self.getDegree() > 2:
             self.grahamConvex()
-            self.draw()
-            self.update()
+        
+        self.draw()
+        self.update()
 
     def equalPositions(self, other_vertices:set) -> bool:
         for v1 in self.vertices:
@@ -68,8 +69,8 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.grahamConvex()
 
     def changeVertex(self, vertex:CanvasVertex, change_convex=True) -> None:
-        self.vertices -= {vertex}
-        self.vertices |= {vertex}
+        self.vertices = {v for v in self.vertices if vertex != v}
+        self.vertices.add(vertex)
 
         if change_convex:
             self.grahamConvex()
@@ -79,6 +80,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
     def grahamConvex(self):
         if not self.isHyperedge():
             return
+
+        print("Vertices: {}".format(' '.join(map(str, self.vertices))))
+        print("Type of vertices:{}".format(type(self.vertices)))
 
         vertices = list(self.vertices)
         bottom_points = [vertices[0]]
@@ -200,7 +204,10 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
     def getSupportConvex(self):
         if not self.convex:
-            raise Exception()  
+            raise Exception()
+
+        if not self.isHyperedge():
+            raise Exception("Edge {} is not a hyperedge to create support convex for it!".format(self.getId())) 
 
         self.support_convex = self.inflateConvex([v.pos() for v in self.convex], self.real_point_gap)
         

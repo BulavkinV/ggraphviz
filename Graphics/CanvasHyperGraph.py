@@ -333,6 +333,11 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                         continue
 
                     if success:
+                        # edges = self.getEdgesById(self.verticesVersusEdges[vertex_to_rename.getId()])
+                        # self.removeVertex(vertex_to_rename)
+                        # vertex_to_rename.setId(text)
+                        
+                        # self.addNewVertex(vertex_to_rename, edges)
                         self.renameVertex(vertex_to_rename, text)
 
 
@@ -452,12 +457,12 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
     def placeVertex(self, vertex:CanvasVertex, pos:QtCore.QPointF):
         self.removeItem(vertex)
         self.vertices -= {vertex}
-        
+
         vertex.setPos(pos)
         edges = self.getEdgesById(self.verticesVersusEdges[vertex.getId()])
         [edges[i].changeVertex(vertex) for i in range(len(edges))]
         self.exchangeEdges(edges)
-        
+
         self.vertices |= {vertex}
         self.addItem(vertex)
         # for item in self.items():
@@ -529,6 +534,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         for edge in edges_to_remove:
             self.removeEdge(edge)
+
+        
         
     def addNewEdge(self, vertices:set) -> None:
         edge = CanvasHyperEdge(*vertices)
@@ -549,15 +556,26 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
     def renameVertex(self, vertex:CanvasVertex, new_id:str) -> None:
         old_id = vertex.getId()
 
-        for edge_id in self.verticesVersusEdges[old_id]:
-            edge = self.getEdgeById(edge_id)
-            edge.renameVertex(old_id, new_id)
+        # for edge_id in self.verticesVersusEdges[old_id]:
+        #     edge = self.getEdgeById(edge_id)
+        #     edge.renameVertex(old_id, new_id)
 
         self.verticesVersusEdges[new_id] = self.verticesVersusEdges[old_id]
         self.verticesVersusEdges.pop(old_id)
 
         vertex.setId(new_id)
 
+        # self.removeItem(vertex)
+        # self.vertices -= {vertex}
+        
+        
+        # edges = self.getEdgesById(self.verticesVersusEdges[vertex.getId()])
+        # vertex.setId(new_id)
+        # [edges[i].changeVertex(vertex) for i in range(len(edges))]
+        # self.exchangeEdges(edges)
+        
+        # self.vertices |= {vertex}
+        # self.addItem(vertex)
                 
 
     def addVertices(self, vertices:set, edge:CanvasHyperEdge=None):

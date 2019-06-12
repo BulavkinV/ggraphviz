@@ -17,8 +17,11 @@ class Vertex:
         new_id = new_id.strip()
         self.id = new_id
 
-    def __eq__(self, other):
-        return self.id == other.id
+    def __eq__(self, other:Vertex) -> bool:
+        return (self.id == other.id)
+
+    def  __ne__(self, other:Vertex) -> bool:
+        return  self.id != other.id
 
     def __add__(self, other):
         return Vertex(self.id + '+' + other.id)
