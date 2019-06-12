@@ -36,13 +36,7 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         self.text = QtWidgets.QGraphicsTextItem(self.getId(), self)
         # self.text.setTextInteractionFlags(QtCore.Qt.TextEditable)
         # self.text.document().contentsChanged.connect(self.changeIdFromText)
-        self.text.setPos(
-            self.ellipse.pos() + 
-            QtCore.QPointF(
-                - self.text.boundingRect().width() / 2. , 
-                - self.text.boundingRect().height() - self.vertex_height/2. - self.vertex_text_gap
-            )
-        )
+        self.positionText()
         
         # TODO debug
         # self.x_axis = QtWidgets.QGraphicsLineItem(-100., 0., 100., 0., self)
@@ -67,6 +61,16 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
     def setId(self, new_id:str) -> None:
         Vertex.setId(self, new_id)
         self.text.setPlainText(new_id)
+        self.positionText()
+
+    def positionText(self):
+        self.text.setPos(
+            self.ellipse.pos() +
+            QtCore.QPointF(
+                - self.text.boundingRect().width() / 2. ,
+                - self.text.boundingRect().height() - self.vertex_height/2. - self.vertex_text_gap
+            )
+        )
 
     def setPos(self, *args, **kwargs):
         self.placed = True
