@@ -33,8 +33,9 @@ class HyperGraph():
 
 
     def _copy_constructor(self, other:HyperGraph):
-        self.vertices = other.getVertices()
-        self.edges = other.getEdges()
+        self.vertices = {Vertex(other=v) for v in other.getVertices()}
+        self.edges = [HyperEdge(*({v for v in self.vertices if v in e.getVertices()})) for e in other.getEdges()]
+        # self.edges = [HyperEdge(other=e) e in other.getEdges()]
 
     def getVertices(self):
         return self.vertices
@@ -103,12 +104,12 @@ class HyperGraph():
         # TODO
         return True
 
-    def isSContractable(self, with_linear_condition = False):
+    def isContractable(self, with_linear_condition = False):
         """
             using simple algorithm
         """
         # TODO
-        if not self.isConnected():
+        if not self.isConnected() or not self.edges:
             return False
         
         edges = self.edges
@@ -189,5 +190,22 @@ class HyperGraph():
                     # print(HyperGraph(vertices=vertices, edges=edges))
                     if edge_to_start_with < len(edges):
                         break
+
+        hypergraphs = [HyperGraph(other=HyperGraph(vertices=vertices.copy(), edges=edges.copy()))]
+        while delete_stack:
+            edge_deletion = delete_stack.pop()
+            edges.insert(edge_deletion.index, HyperEdge(*[Vertex(other=edge_deletion.first_vertex), Vertex(other=edge_deletion.second_vertex)]))
+            for i in edge_deletion.first_indices:
+                edges[i].replaceVertex(edge_deletion.new_vertex, edge_deletion.first_vertex)
+            for i in edge_deletion.second_indices:
+                if edge_deletion.new_vertex in edges[i].getVertices():
+                    edges[i].replaceVertex(edge_deletion.new_vertex, edge_deletion.second_vertex)
+                else:
+                    edges[i].addVertex(edge_deletion.second_vertex)
+            vertices -= {edge_deletion.new_vertex}
+            vertices |= {edge_deletion.first_vertex, edge_deletion.second_vertex}
+            hypergraphs.append(HyperGraph(other=HyperGraph(vertices=vertices.copy(), edges=edges.copy())))
+
+        self.contraction_sequence = reversed(hypergraphs)
 
         return True
