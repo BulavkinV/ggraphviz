@@ -47,6 +47,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
     def deleteVertex(self, vertex:CanvasVertex) -> None:
         HyperEdge.deleteVertex(self, vertex)
+        for vertex in self.vertices:
+            if type(vertex) is Vertex:
+                return
         if self.getDegree() > 2:
             self.grahamConvex()
         

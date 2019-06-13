@@ -1,7 +1,14 @@
+from pathlib import Path
+
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QToolBar, QStatusBar
 
 from Graphics.CanvasHyperGraph import CanvasHyperGraph
 from Graphics.CanvasWidget import CanvasWidget
+
+from Hypergraph import HyperGraph
+from Vertex import Vertex
+from HyperEdge import HyperEdge
 
 class MainWindow(QMainWindow):
     
@@ -29,28 +36,53 @@ class MainWindow(QMainWindow):
     def createToolbar(self) -> QToolBar:
         toolbar = QToolBar()
 
+        import os
+        print(os.system("pwd"))
+
         action = toolbar.addAction('load_hg')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/load.png'))))
+        action.setText("Загрузить гиперграф")
         action.triggered.connect(self.centralWidget().loadHypergraphSlot)
 
         action = toolbar.addAction('save_hg')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/save.png'))))
+        action.setText("Сохранить гиперграф")
         action.triggered.connect(self.centralWidget().saveHypergraphSlot)
 
         action = toolbar.addAction('new_scene')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/new.png'))))
+        action.setText("Новый гиперграф")
         action.triggered.connect(self.centralWidget().resetSceneSlot)
 
         toolbar.addSeparator()
 
         action = toolbar.addAction('add_vertex')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/new_vertex.png'))))
+        action.setText("Добавить вершину")
         action.triggered.connect(self.centralWidget().addVertexForCurrentSceneSlot)
         
         action = toolbar.addAction('remove_vertex')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/remove_vertex.png'))))
+        action.setText("Удалить вершину")
         action.triggered.connect(self.centralWidget().removeVertexForCurrentSceneSlot)
 
         action = toolbar.addAction('add_edge')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/new_edge.png'))))
+        action.setText("Добавить ребро")
         action.triggered.connect(self.centralWidget().addEdgeForCurrentSceneSlot)
 
         action = toolbar.addAction('remove_edge')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/remove_edge.png'))))
+        action.setText("Удалить ребро ребро")
         action.triggered.connect(self.centralWidget().removeEdgeForCurrentSceneSlot)
 
+        toolbar.addSeparator()
+
+        action = toolbar.addAction('contraction_player')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/contraction.png'))))
+        action.setText("Стягивание гиперграфа")
+        action.triggered.connect(self.centralWidget().startContractionPlayerSlot)
+
         return toolbar
+
 
