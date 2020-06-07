@@ -18,7 +18,7 @@ class Vertex:
         self.id = new_id
 
     def __eq__(self, other:Vertex) -> bool:
-        return (self.id == other.id)
+        return self.id == other.id
 
     def  __ne__(self, other:Vertex) -> bool:
         return  self.id != other.id

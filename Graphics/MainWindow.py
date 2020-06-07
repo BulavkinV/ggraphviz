@@ -83,6 +83,13 @@ class MainWindow(QMainWindow):
         action.setText("Стягивание гиперграфа")
         action.triggered.connect(self.centralWidget().startContractionPlayerSlot)
 
+        toolbar.addSeparator()
+
+        action = toolbar.addAction('сontraction_2')
+        action.setIcon(QtGui.QIcon(str(Path('Resources/contraction.png'))))
+        action.setText("Cтягивание v2.0")
+        action.triggered.connect(self.centralWidget().startContractionPlayerSlot2)
+
         return toolbar
 
 

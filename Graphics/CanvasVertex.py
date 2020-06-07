@@ -5,6 +5,8 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from Vertex import Vertex
 
+
+# noinspection PyPep8Naming
 class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
     """
     """
@@ -27,9 +29,11 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         self.vertex_ellipse_rect = QtCore.QRectF(
             -self.vertex_width/2., -self.vertex_height/2,
             self.vertex_width, self.vertex_height
-        ) 
+        )
+        self.ellipse_pairing_brush = QtGui.QBrush(QtCore.Qt.green)
         self.ellipse_default_brush = QtGui.QBrush(QtCore.Qt.black)
         self.ellipse_selected_brush = QtGui.QBrush(QtCore.Qt.red)
+
         self.ellipse = QtWidgets.QGraphicsEllipseItem(self.vertex_ellipse_rect, self)
         self.ellipse.setBrush(self.ellipse_default_brush)
 
@@ -48,6 +52,12 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
         QtWidgets.QGraphicsItem.__init__(self)
         if hasattr(other, 'setPos'):
             self.setPos(other.pos())
+
+    def set_as_pairing(self) -> CanvasVertex:
+        self.ellipse.setBrush(self.ellipse_pairing_brush)
+        print('set_as_pairing')
+        self.ellipse.update()
+        return self
 
     def __eq__(self, other:CanvasVertex) -> bool:
         return Vertex.__eq__(self, other)

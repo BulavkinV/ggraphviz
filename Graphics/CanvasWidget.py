@@ -1,11 +1,23 @@
+import functools
+from collections import Set
 from pathlib import Path
+from typing import List
 
 from PyQt5.QtWidgets import QFileDialog, QGraphicsView, QToolBar, QMessageBox
 from PyQt5 import QtCore
 
 from Hypergraph import HyperGraph
 from Graphics.CanvasHyperGraph import CanvasHyperGraph
+from Vertex import Vertex
 
+
+def filter_vertices (s: List, v: Vertex) -> Set:
+    if v.id in ['a', 'b']:
+        s.append(v)
+
+    return s
+
+# noinspection PyPep8Naming
 class CanvasWidget(QGraphicsView):
     
     def __init__(self, scene:CanvasHyperGraph):
@@ -13,6 +25,7 @@ class CanvasWidget(QGraphicsView):
         self.setMouseTracking(True)
 
         self._createContractionToolbar()
+        self._create_contraction_toolbar()
 
     def _createContractionToolbar(self):
         toolbar = QToolBar(parent=self)
@@ -28,6 +41,21 @@ class CanvasWidget(QGraphicsView):
         action.triggered.connect(self.stopContractionPlayerSlot)
 
         self.contraction_toolbar = toolbar
+
+    def _create_contraction_toolbar(self):
+        toolbar = QToolBar(parent=self)
+        toolbar.setFloatable(True)
+        toolbar.setMovable(True)
+        toolbar.hide()
+
+        action = toolbar.addAction('next')
+        action.triggered.connect(self.next_hg2)
+        action = toolbar.addAction('previous')
+        action.triggered.connect(self.previous_hg2)
+        action = toolbar.addAction('stop')
+        action.triggered.connect(self.stopContractionPlayerSlot2)
+
+        self.contraction_toolbar2 = toolbar
 
     def loadHypergraphSlot(self):
         filename = QFileDialog.getOpenFileName(self, caption="Открыть файл гиперграфа",
@@ -108,6 +136,33 @@ class CanvasWidget(QGraphicsView):
         del self.current_hg_index
         del self.list_of_graphs
 
+    def startContractionPlayerSlot2(self):
+
+        self.saved_scene = self.scene()
+        start_hg = self.saved_scene
+
+        start_hg = HyperGraph(other=start_hg)
+        self.contraction_toolbar2.show()
+
+        chg = CanvasHyperGraph(start_hg)
+
+        for canvas_vertex in chg.vertices:
+            if canvas_vertex.id in ['a', 'b']:
+                print(canvas_vertex.id)
+                canvas_vertex.set_as_pairing()
+
+        self.setScene(chg)
+
+    def next_hg2(self):
+        pass
+
+    def previous_hg2(self):
+        pass
+
+    def stopContractionPlayerSlot2(self):
+        self.contraction_toolbar2.hide()
+
+        self.setScene(self.saved_scene)
 
     def resetSceneSlot(self):
         self.setScene(CanvasHyperGraph())
@@ -123,3 +178,4 @@ class CanvasWidget(QGraphicsView):
 
     def removeEdgeForCurrentSceneSlot(self):
         self.scene().removeEdgeSlot()
+

@@ -45,9 +45,6 @@ class HyperGraphCanvas(QtWidgets.QGraphicsScene):
             if edge.hyperedge.isHyperedge():
                 edge.grahamConvex()
 
-
-        
-
     def drawVertices(self, vertices:set()):
         for vertex in vertices:
             self.drawVertex(vertex)

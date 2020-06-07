@@ -6,6 +6,7 @@ from Hypergraph import HyperGraph
 from HyperEdge import HyperEdge
 from Vertex import Vertex
 
+
 def loadSampleHyperGraph():
     h = HyperGraph()
     # vertices = [Vertex(i) for i in range(1, 9)]
@@ -24,6 +25,7 @@ def loadSampleHyperGraph():
     # h.addVertex(Vertex('ok'))
     return h
 
+
 graph_directory = Path('Graphs')
 # h = HyperGraph()
 # h.loadJson(open(graph_directory / 'SampleOverbasedGraph.json', 'r'))
@@ -40,9 +42,8 @@ from Graphics.CanvasHyperGraph import CanvasHyperGraph
 from Hypergraph import HyperGraph
 
 if __name__ == '__main__':
-
     logging.basicConfig(level=logging.DEBUG)
-    
+
     app = QApplication(sys.argv)
     h = HyperGraph()
     # h.addVertex(Vertex("Sample Vertex"))

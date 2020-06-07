@@ -37,6 +37,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.hovered_brush = QtGui.QBrush()
         self.hovered_brush.setColor(QtCore.Qt.red)
 
+        self.pairing_brush = QtGui.QBrush()
+        self.pairing_brush.setColor(QtCore.Qt.green)
+
         self.default_brush = QtGui.QBrush()
         # self.score = 0
         self.setBrush(self.hovered_brush)

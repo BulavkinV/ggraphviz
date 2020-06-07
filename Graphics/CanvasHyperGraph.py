@@ -4,13 +4,14 @@ from math import pi, sin, cos
 from enum import Enum, auto
 import logging
 
-from PyQt5 import QtWidgets, QtGui, QtCore 
+from PyQt5 import QtWidgets, QtGui, QtCore
 
 from Graphics.CanvasHyperEdge import CanvasHyperEdge
 from Graphics.CanvasVertex import CanvasVertex
 
 from Hypergraph import HyperGraph
 from HyperEdge import HyperEdgeCrossingVariants
+
 
 class SceneModes(Enum):
     NONE = auto()
@@ -19,10 +20,11 @@ class SceneModes(Enum):
     ADD_NEW_EDGE = auto()
     REMOVE_EDGE = auto()
 
+
 class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
-    
-    #initial procedures
-    def __init__(self, hypergraph:HyperGraph=None, **kwargs):
+
+    # initial procedures
+    def __init__(self, hypergraph: HyperGraph = None, **kwargs):
         QtWidgets.QGraphicsScene.__init__(self)
 
         self.logger = logging.getLogger("hypergraph_logger")
@@ -33,8 +35,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         else:
             HyperGraph.__init__(
                 self,
-                edges = kwargs.pop('edges', []),
-                vertices = kwargs.pop('vertices', set())
+                edges=kwargs.pop('edges', []),
+                vertices=kwargs.pop('vertices', set())
             )
 
         self.edge_len = 100.
@@ -59,8 +61,6 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         # TODO vertices placing
 
-
-
         # self.edges = [CanvasHyperEdge(x, self.vertices) for x in hg.getEdges()]
 
         self.calculateEdgesMultiplicity()
@@ -76,53 +76,52 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         return
         if self.vertices:
             square = len(self.vertices) * self.scene_square_per_point
-            scene_side = square**.5
+            scene_side = square ** .5
             self.setSceneRect(0., 0., scene_side, scene_side)
 
     # mode operations
-    def setMode(self, mode:SceneModes) -> None:
+    def setMode(self, mode: SceneModes) -> None:
         self.mode = mode
 
     def getMode(self) -> SceneModes:
         return self.mode
 
     # simple operations
-    def getEdgeById(self, id:str) -> CanvasHyperEdge:
+    def getEdgeById(self, id: str) -> CanvasHyperEdge:
         for edge in self.edges:
             if id == edge.getId():
                 return edge
 
         raise AttributeError
 
-    def getEdgesById(self, ids:list) -> list:
+    def getEdgesById(self, ids: list) -> list:
         result = []
         for id in ids:
             result.append(self.getEdgeById(id))
 
         return result
 
-    def getVertexById(self, id:str) -> CanvasVertex:
+    def getVertexById(self, id: str) -> CanvasVertex:
         for vertex in self.vertices:
             if vertex.getId() == id:
                 return vertex
-        
+
         raise AttributeError
 
-    def exchangeEdges(self, edges:list) -> None:
+    def exchangeEdges(self, edges: list) -> None:
         for i, edge in enumerate(self.edges):
             if edge in edges:
                 self.removeItem(edge)
                 self.edges[i] = edge
                 self.addItem(self.edges[i])
 
-
     # correct vertex placement
     def initialVertexPlacement(self):
-        left = 0. # self.sceneRect().left()
-        right = self.scene_square_per_point**.5#  self.sceneRect().right()
+        left = 0.  # self.sceneRect().left()
+        right = self.scene_square_per_point ** .5  # self.sceneRect().right()
         for vertex in self.vertices:
             vertex.setPos(QtCore.QPointF(random.uniform(left, right), random.uniform(left, right)))
-            vertex.setZValue(1)    
+            vertex.setZValue(1)
             self.addItem(vertex)
 
     def verticesVersusEdgesDict(self):
@@ -143,14 +142,15 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                 # friendly_centers = [ mass_centers[id] for id in edges_ids ]
                 # print(self.getVertexById('2').pos(), self.getVertexById('3').pos(), pos, friendly_centers[0])
 
-                friendly_vertices = [e.getVertices() for e in [self.getEdgeById(id) for id in edges_ids ] ]
+                friendly_vertices = [e.getVertices() for e in [self.getEdgeById(id) for id in edges_ids]]
                 friendly_vertices_set = set()
                 for vers in friendly_vertices:
                     friendly_vertices_set |= set(vers)
                 friendly_vertices = friendly_vertices_set
 
                 # hostile_centers = {e for e in [edge.getId() for edge in self.edges] if e not in edges_ids}
-                hostile_vertices = self.vertices - friendly_vertices - {vertex} # set(self.verticesVersusEdges.keys()) - friendly_vertices
+                hostile_vertices = self.vertices - friendly_vertices - {
+                    vertex}  # set(self.verticesVersusEdges.keys()) - friendly_vertices
 
                 friendly_vertices = friendly_vertices_set - {vertex}
 
@@ -159,7 +159,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     # TODO / len(edge)
                     modulus = CanvasVertex.distance_pos(fc.pos(), pos) - self.edge_len
                     # print(fc.pos(), pos)
-                    new_pos += (fc.pos() - pos)* modulus /  CanvasVertex.distance_pos(fc.pos(), pos)
+                    new_pos += (fc.pos() - pos) * modulus / CanvasVertex.distance_pos(fc.pos(), pos)
 
                 for fc in hostile_vertices:
                     # (fc - pos)*modulus
@@ -169,19 +169,18 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                         continue
                     # angle = CanvasVertex.polar_angle_pos(fc.pos(), pos)
                     print(fc.pos(), pos)
-                    new_pos += (fc.pos() - pos)* modulus / CanvasVertex.distance_pos(fc.pos(), pos)
+                    new_pos += (fc.pos() - pos) * modulus / CanvasVertex.distance_pos(fc.pos(), pos)
 
-                self.placeVertex(vertex, pos+new_pos)
-                if CanvasVertex.distance_pos(pos, pos+new_pos) > self.edge_len / 2.:
+                self.placeVertex(vertex, pos + new_pos)
+                if CanvasVertex.distance_pos(pos, pos + new_pos) > self.edge_len / 2.:
                     any_placement = True
 
                 self.updateEdges()
 
         # self.updateEdges()
 
-
     # events
-    def mousePressEvent(self, mouseEvent:QtWidgets.QGraphicsSceneMouseEvent) -> None:
+    def mousePressEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         if self.mode is SceneModes.NONE:
             item = self.itemAt(mouseEvent.scenePos(), QtGui.QTransform())
             if type(item) is QtWidgets.QGraphicsEllipseItem:
@@ -211,22 +210,24 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             if isinstance(item, CanvasHyperEdge):
                 self.removeEdge(item)
                 self.setMode(SceneModes.NONE)
-            
-    def mouseMoveEvent(self,  mouseEvent:QtWidgets.QGraphicsSceneMouseEvent) -> None:
+
+    def mouseMoveEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         # QtWidgets.QGraphicsScene.mouseMoveEvent(self, mouseEvent)
         # QtWidgets.QToolTip.hideText()
         items = self.items(mouseEvent.scenePos())
-        
-        if self.mode is SceneModes.NONE: 
-            selected_edges = [e for e in items if isinstance(e, CanvasHyperEdge)]        
+
+        if self.mode is SceneModes.NONE:
+            selected_edges = [e for e in items if isinstance(e, CanvasHyperEdge)]
 
             if self.selected_vertex:
                 new_edges = [e for e in selected_edges if e not in self.selected_vertex_edges]
                 if new_edges:
                     if len(new_edges) > 1:
-                        format_string = "Добавить вершину '{}' к рёбрам {}?".format(self.selected_vertex.getId(), ','.join(map(str, new_edges)))
+                        format_string = "Добавить вершину '{}' к рёбрам {}?".format(self.selected_vertex.getId(),
+                                                                                    ','.join(map(str, new_edges)))
                     else:
-                        format_string = "Добавить вершину '{}' к рёбру {}?".format(self.selected_vertex.getId(), str(new_edges[0]))
+                        format_string = "Добавить вершину '{}' к рёбру {}?".format(self.selected_vertex.getId(),
+                                                                                   str(new_edges[0]))
                     QtWidgets.QToolTip.showText(mouseEvent.screenPos(), format_string, mouseEvent.widget())
                 else:
                     QtWidgets.QToolTip.hideText()
@@ -235,8 +236,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             self.selectEdges(selected_edges)
             # elif type(item) is QtWidgets.QGraphicsEllipseItem:
             #     selected_edges += [e for e in self.items(mouseEvent.scenePos()) if isinstance(e, CanvasHyperEdge) and e not in selected_edges]
-            
-            
+
+
         elif self.mode is SceneModes.ADD_NEW_VERTEX:
             self.selected_vertex.setPos(mouseEvent.scenePos())
             edges = [e for e in items if isinstance(e, CanvasHyperEdge)]
@@ -256,8 +257,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             self.selectEdges(selected_edges)
 
         QtWidgets.QGraphicsScene.mouseMoveEvent(self, mouseEvent)
-        
-    def mouseReleaseEvent(self, mouseEvent:QtWidgets.QGraphicsSceneMouseEvent) -> None:
+
+    def mouseReleaseEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         if self.mode is SceneModes.NONE:
             if self.selected_vertex:
                 # Если вершина опущена над рёбрами нужно добавлять её в эти рёбра (через диалог)
@@ -267,16 +268,16 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     for edge in new_edges:
                         edge.addVertex(self.selected_vertex)
                         self.verticesVersusEdges[self.selected_vertex.getId()].append(edge.getId())
-                
+
                 self.placeVertex(self.selected_vertex, self.selected_vertex.pos())
-            
+
             self.selected_vertex = None
 
         elif self.mode is SceneModes.ADD_NEW_VERTEX:
             success = False
             while not success:
                 text, success = QtWidgets.QInputDialog.getText(mouseEvent.widget(), "Создание новой вершины",
-                                    "Введите имя вершины:")
+                                                               "Введите имя вершины:")
                 if success:
                     if not text:
                         msgBox = QtWidgets.QMessageBox(mouseEvent.widget())
@@ -291,7 +292,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                         msgBox.exec()
                         success = False
                         continue
-                    
+
                     new_vertex.setPos(mouseEvent.scenePos())
 
                     self.addNewVertex(new_vertex, self.selected_vertex_edges)
@@ -302,8 +303,8 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     self.setMode(SceneModes.NONE)
                 else:
                     break
-                
-    def mouseDoubleClickEvent(self, mouseEvent:QtWidgets.QGraphicsSceneMouseEvent) -> None:
+
+    def mouseDoubleClickEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         if self.mode is SceneModes.NONE:
             items = self.items(mouseEvent.scenePos())
             vertex_to_rename = None
@@ -320,12 +321,15 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             if vertex_to_rename:
                 success = False
                 while not success:
-                    text, success = QtWidgets.QInputDialog.getText(mouseEvent.widget(), "Переименование вершины {}".format(vertex_to_rename.getId()),
-                                    "Введите новое имя вершины {}:".format(vertex_to_rename.getId()))
+                    text, success = QtWidgets.QInputDialog.getText(mouseEvent.widget(),
+                                                                   "Переименование вершины {}".format(
+                                                                       vertex_to_rename.getId()),
+                                                                   "Введите новое имя вершины {}:".format(
+                                                                       vertex_to_rename.getId()))
 
                     if not success:
                         break
-                    
+
                     if success:
                         text = text.strip()
 
@@ -346,14 +350,13 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                         # edges = self.getEdgesById(self.verticesVersusEdges[vertex_to_rename.getId()])
                         # self.removeVertex(vertex_to_rename)
                         # vertex_to_rename.setId(text)
-                        
+
                         # self.addNewVertex(vertex_to_rename, edges)
                         self.renameVertex(vertex_to_rename, text)
 
-
-    def keyPressEvent(self, keyEvent:QtGui.QKeyEvent) -> None:
+    def keyPressEvent(self, keyEvent: QtGui.QKeyEvent) -> None:
         if self.getMode() is SceneModes.ADD_NEW_EDGE:
-            if keyEvent.key() in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return] :
+            if keyEvent.key() in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
                 if len(self.selected_vertices) >= 1:
                     self.addNewEdge(self.selected_vertices)
                     for vertex in self.selected_vertices:
@@ -364,31 +367,30 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         QtWidgets.QGraphicsScene.keyPressEvent(self, keyEvent)
         print(list(map(lambda x: x.getId(), self.vertices)))
 
-    def selectEdges(self, edges:list) -> None:
+    def selectEdges(self, edges: list) -> None:
         for edge in self.edges:
             if edge in edges:
                 edge.setSelected(True)
             else:
                 edge.setSelected(False)
-            
 
     def calculateEdgeCenters(self):
         result = {}
         for edge in self.edges:
             result[edge.getId()] = edge.calculateCenter()
-        
+
         return result
 
     def updateEdges(self):
         for edge in self.edges:
             edge.updateVertices(self.vertices)
-   
+
     def initialVerticesPlacement(self):
         scores = [x.getScore() for x in self.edges]
         index = scores.index(max(scores))
-        
+
         # intersect_indices = [ i for i, x in enumerate(map(lambda x: x in [HyperEdgeCrossingVariants.CROSSING, HyperEdgeCrossingVariants.ONE_INSIDE_ANOTHER, HyperEdgeCrossingVariants.SAME], self.crossing_matrix[index])) if x]
-        
+
         # self.placeEdgeVertices(self.edges[index], QtCore.QPointF(0., 0.))
 
         open = [index]
@@ -396,19 +398,21 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         pos = QtCore.QPointF(0., 0.)
         while open:
-            scores = [ x.getScore() for x in [self.edges[i] for i in open] ]
+            scores = [x.getScore() for x in [self.edges[i] for i in open]]
             max_score_index = scores.index(max(scores))
             index = open[max_score_index]
-            del open[max_score_index]            
+            del open[max_score_index]
 
             self.placeEdgeVertices(self.edges[index], pos)
             pos += QtCore.QPointF(200., 0.)
 
-            intersect_indices = [ i for i, x in enumerate(map(lambda x: x in [HyperEdgeCrossingVariants.CROSSING, HyperEdgeCrossingVariants.ONE_INSIDE_ANOTHER, HyperEdgeCrossingVariants.SAME], self.crossing_matrix[index])) if x]
+            intersect_indices = [i for i, x in enumerate(map(
+                lambda x: x in [HyperEdgeCrossingVariants.CROSSING, HyperEdgeCrossingVariants.ONE_INSIDE_ANOTHER,
+                                HyperEdgeCrossingVariants.SAME], self.crossing_matrix[index])) if x]
             intersect_indices = [x for x in intersect_indices if x not in open + closed]
 
             open += intersect_indices
-            
+
             closed.append(index)
 
             if not open and len(closed) != len(self.edges):
@@ -416,7 +420,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                 pass
 
     def calculateEdgesMultiplicity(self):
-        self.same_edges = {edge.getId():[] for edge in self.edges}
+        self.same_edges = {edge.getId(): [] for edge in self.edges}
         for edge in self.edges:
             list_of_same_edges = [e.getId() for e in self.edges if edge.getVertices() == e.getVertices() and edge != e]
             self.same_edges[edge.getId()] = list_of_same_edges
@@ -432,21 +436,21 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     excluded_edges_ids.append(increase_multiplicity_edge_id)
             excluded_edges_ids.append(edge_id)
 
-    def regularPolygon(self, n:int, start_point:QtCore.QPointF):
+    def regularPolygon(self, n: int, start_point: QtCore.QPointF):
         points = [start_point]
         internal_angle = (n - 2.) * pi / n
         prev_point = start_point
-        
+
         angle = pi - internal_angle / 2.
         angle = (pi * n + 2. * pi) / (2 * n)
-        delta_angle = 2.* pi / n
+        delta_angle = 2. * pi / n
         for i in range(1, n):
             points.append(
                 QtCore.QPointF(
                     # cos(internal_angle) * prev_point.x() - sin(internal_angle) * prev_point.y(),
                     # sin(internal_angle) * prev_point.x() + cos(internal_angle) * prev_point.x()
-                    prev_point.x() + self.edge_len*cos(angle),
-                    prev_point.y() + self.edge_len*sin(angle)
+                    prev_point.x() + self.edge_len * cos(angle),
+                    prev_point.y() + self.edge_len * sin(angle)
                 )
             )
             angle += delta_angle
@@ -456,14 +460,14 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         return points
 
-    def placeEdgeVertices(self, edge:CanvasHyperEdge, start_position:QtCore.QPointF):
+    def placeEdgeVertices(self, edge: CanvasHyperEdge, start_position: QtCore.QPointF):
         points = list(edge.getVertices())
         if edge.isSimpleEdge():
             if points[0].isPlaced():
                 if not points[1].isPlaced():
-                #     self.placeVertex(points[0], start_position)
-                #     self.placeVertex(points[1], start_position + QtCore.QPointF(100., 0))
-                # else:
+                    #     self.placeVertex(points[0], start_position)
+                    #     self.placeVertex(points[1], start_position + QtCore.QPointF(100., 0))
+                    # else:
                     self.placeVertex(points[1], points[0].pos() + QtCore.QPointF(100., 0))
 
             else:
@@ -478,10 +482,10 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             positions = self.regularPolygon(edge.getDegree(), start_position)
             for point, pos in zip(points, positions):
                 self.placeVertex(point, pos)
-            
+
         edge.updateVertices(self.vertices)
 
-    def placeVertex(self, vertex:CanvasVertex, pos:QtCore.QPointF):
+    def placeVertex(self, vertex: CanvasVertex, pos: QtCore.QPointF):
         self.removeItem(vertex)
         self.vertices -= {vertex}
 
@@ -495,20 +499,20 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         # for item in self.items():
         #     if type(item) is CanvasVertex and item == vertex:
         #         item.setPos(pos)
-    
-    def exchangeVertices(self, v1:CanvasVertex, v2:CanvasVertex):
+
+    def exchangeVertices(self, v1: CanvasVertex, v2: CanvasVertex):
         pass
 
-    def drawVertices(self, vertices:set()):
+    def drawVertices(self, vertices: set()):
         for vertex in vertices:
             self.drawVertex(vertex)
 
-    def drawVertex(self, vertex:CanvasVertex):
+    def drawVertex(self, vertex: CanvasVertex):
         if vertex in filter(lambda item: isinstance(item, CanvasVertex), self.items()):
             return
         while True:
-            vertex.setX(random.randint(0,100))
-            vertex.setY(random.randint(0,100))
+            vertex.setX(random.randint(0, 100))
+            vertex.setY(random.randint(0, 100))
             if not self.collidingItems(vertex):
                 break
 
@@ -522,31 +526,30 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             edge.draw()
             self.addItem(edge)
 
-                # for i, item in enumerate(support_convex):
-                #     vertex = CanvasVertex(id=str(i)+ '!')
-                #     vertex.setPos(item)
-                #     self.addItem(vertex)
+            # for i, item in enumerate(support_convex):
+            #     vertex = CanvasVertex(id=str(i)+ '!')
+            #     vertex.setPos(item)
+            #     self.addItem(vertex)
 
     def drawEdge(self, edge: CanvasHyperEdge):
         self.addItem(edge)
 
-
-    def addVertex(self, vertex:CanvasVertex, edge:CanvasHyperEdge=None):
+    def addVertex(self, vertex: CanvasVertex, edge: CanvasHyperEdge = None):
         super().addVertex(vertex, edge)
         self.addItem(vertex)
 
-    def addNewVertex(self, vertex:CanvasVertex, edges:list=None) -> None:
+    def addNewVertex(self, vertex: CanvasVertex, edges: list = None) -> None:
         self.vertices.add(vertex)
         if edges:
             for edge in edges:
                 edge.addVertex(vertex)
-            
+
         self.verticesVersusEdges[vertex.getId()] = [edge.getId() for edge in edges] if edges else []
         vertex.setZValue(1)
         self.addItem(vertex)
         self.placeVertex(vertex, vertex.pos())
 
-    def removeVertex(self, vertex:CanvasVertex) -> None:
+    def removeVertex(self, vertex: CanvasVertex) -> None:
         self.removeItem(vertex)
         self.vertices -= {vertex}
         self.verticesVersusEdges.pop(vertex.getId())
@@ -562,9 +565,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         for edge in edges_to_remove:
             self.removeEdge(edge)
 
-        
-        
-    def addNewEdge(self, vertices:set) -> None:
+    def addNewEdge(self, vertices: set) -> None:
         edge = CanvasHyperEdge(*vertices)
 
         # checking for same_edges
@@ -586,7 +587,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         edge.draw()
         self.addItem(edge)
 
-    def removeEdge(self, edge:CanvasHyperEdge) -> None:
+    def removeEdge(self, edge: CanvasHyperEdge) -> None:
         edge_id = edge.getId()
 
         # check for same edges
@@ -601,12 +602,12 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         self.same_edges.pop(edge_id)
 
         for l in self.verticesVersusEdges.values():
-                if edge_id in l:
-                    l.remove(edge_id)
+            if edge_id in l:
+                l.remove(edge_id)
         self.edges.remove(edge)
         self.removeItem(edge)
 
-    def renameVertex(self, vertex:CanvasVertex, new_id:str) -> None:
+    def renameVertex(self, vertex: CanvasVertex, new_id: str) -> None:
         old_id = vertex.getId()
 
         # for edge_id in self.verticesVersusEdges[old_id]:
@@ -620,22 +621,20 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
 
         # self.removeItem(vertex)
         # self.vertices -= {vertex}
-        
-        
+
         # edges = self.getEdgesById(self.verticesVersusEdges[vertex.getId()])
         # vertex.setId(new_id)
         # [edges[i].changeVertex(vertex) for i in range(len(edges))]
         # self.exchangeEdges(edges)
-        
+
         # self.vertices |= {vertex}
         # self.addItem(vertex)
-                
 
-    def addVertices(self, vertices:set, edge:CanvasHyperEdge=None):
+    def addVertices(self, vertices: set, edge: CanvasHyperEdge = None):
         for vertex in vertices:
             self.addVertex(vertex, edge)
 
-    def addEdge(self, edge:CanvasHyperEdge):
+    def addEdge(self, edge: CanvasHyperEdge):
         edge = CanvasHyperEdge(other=edge)
         super().addEdge(edge)
         # self.drawEdge(edge)
@@ -656,7 +655,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
         vertex_height = 10.
 
         vertex_ellipse_rect = QtCore.QRectF(
-            -vertex_width/2., -vertex_height/2,
+            -vertex_width / 2., -vertex_height / 2,
             vertex_width, vertex_height
         )
         ellipse_default_brush = QtGui.QBrush(QtCore.Qt.green)
@@ -674,13 +673,12 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
     def removeEdgeSlot(self):
         self.setMode(SceneModes.REMOVE_EDGE)
 
-
     # DEPRECATED
     def calculateCrossingMatrix(self):
         # checking crossing variants
-        self.crossing_matrix = [ [False]*len(self.edges) for _ in range(len(self.edges)) ]
+        self.crossing_matrix = [[False] * len(self.edges) for _ in range(len(self.edges))]
         for i, edge in enumerate(self.edges[:-1]):
-            for j, other in enumerate(self.edges[i+1:], i+1):
+            for j, other in enumerate(self.edges[i + 1:], i + 1):
                 self.crossing_matrix[i][j] = edge.getCrossingVariant(other)
 
         # matrix reflection
