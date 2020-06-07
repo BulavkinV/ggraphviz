@@ -13,7 +13,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         # TODO redo
 
         QtWidgets.QGraphicsPathItem.__init__(self)
-        
+
+        self.highlighted = False
+
         if 'other' in kwargs:
             edge = kwargs.pop('other')
             if type(edge) == HyperEdge:
@@ -30,6 +32,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         self.default_pen = QtGui.QPen()
         self.setPen(self.default_pen)
+
+        self.highlighted_pen = QtGui.QPen()
+        self.highlighted_pen.setColor(QtCore.Qt.green)
 
         self.hovered_pen = QtGui.QPen()
         self.hovered_pen.setColor(QtCore.Qt.red)
@@ -341,7 +346,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         if selected:
             self.setPen(self.hovered_pen)
         else:
-            self.setPen(self.default_pen)
+            self.setPen(self.highlighted_pen if self.highlighted else self.default_pen)
         
         self.update()
 
@@ -369,3 +374,10 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
     
     def getScore(self):
         return self.score
+
+    # Дополнительные методы
+
+    def set_as_pairing_search_result(self):
+        self.highlighted = True
+        self.setPen(self.highlighted_pen)
+        self.update()

@@ -47,7 +47,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     h = HyperGraph()
     # h.addVertex(Vertex("Sample Vertex"))
-    # h.loadJson(open(graph_directory / 'SampleGraph1.json', 'r'))
+    h.loadJson(open('test.json', 'r'))
 
     ch = CanvasHyperGraph(h)
     w = MainWindow(ch)

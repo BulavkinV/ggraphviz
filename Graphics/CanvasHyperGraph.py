@@ -168,7 +168,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
                     else:
                         continue
                     # angle = CanvasVertex.polar_angle_pos(fc.pos(), pos)
-                    print(fc.pos(), pos)
+                    # print(fc.pos(), pos)
                     new_pos += (fc.pos() - pos) * modulus / CanvasVertex.distance_pos(fc.pos(), pos)
 
                 self.placeVertex(vertex, pos + new_pos)
@@ -456,7 +456,7 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
             angle += delta_angle
             prev_point = points[-1]
 
-        print('\n'.join([str(p) for p in points]))
+        # print('\n'.join([str(p) for p in points]))
 
         return points
 
@@ -718,3 +718,22 @@ class CanvasHyperGraph(QtWidgets.QGraphicsScene, HyperGraph):
     #     # print("render")
     #     # self.drawVertices()
     #     super().render(*args, **kwargs)
+
+    def find_next_edges(self, vertices, denied_vertices=None):
+        neighbours = []
+
+        for edge in self.edges:
+            has_denied = False
+            has_vertex = False
+
+            for vertex in edge.getVertices():
+                if denied_vertices is not None and vertex.id in denied_vertices:
+                    has_denied = True
+                    break
+                if vertex.id in vertices:
+                    has_vertex = True
+
+            if not has_denied and has_vertex:
+                neighbours.append(edge)
+
+        return neighbours
