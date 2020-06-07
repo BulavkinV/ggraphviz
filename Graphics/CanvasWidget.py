@@ -30,6 +30,71 @@ def find_uniq_vertices(edges_lists):
     return found_vertices
 
 
+def find_max_edge_order(edges):
+    max_order = 0
+
+    for edge in edges:
+        edge_order = get_edge_order(edge)
+        if edge_order > max_order:
+            max_order = edge_order
+
+    return max_order
+
+
+def get_edge_order(edge):
+    return len(edge.vertices)
+
+
+def find_edges_with_lesser_order(edges, order):
+    lesser_order_edges = []
+
+    for edge in edges:
+        edge_order = get_edge_order(edge)
+
+        if edge_order < order:
+            lesser_order_edges.append(edge)
+
+    return lesser_order_edges
+
+
+def find_edges_with_order(edges, order):
+    edge_tuples = []
+
+    for i, edge in enumerate(edges):
+        edge_order = get_edge_order(edge)
+
+        if edge_order is order:
+            edge_tuples.append((i, edge))
+
+    return edge_tuples
+
+
+def has_all_vertices(testing_edge, target_edge):
+    for testing_vertex in testing_edge.vertices:
+        target_edge_vertices_ids = [v.id for v in target_edge.vertices]
+
+        if testing_vertex.id not in target_edge_vertices_ids:
+            return False
+
+    return True
+
+
+def find_sub_edge_indexes(edges, super_edge):
+    sub_edge_indexes = []
+
+    sub_edges = find_edges_with_lesser_order(edges, get_edge_order(super_edge))
+    print('\t\t\tsuper edge', super_edge)
+    print('\t\t\tfound sub edges', [vertices_list_to_str(edge) for edge in sub_edges])
+
+    for i, sub_edge in enumerate(sub_edges):
+        if has_all_vertices(sub_edge, super_edge):
+            sub_edge_indexes.append(i)
+
+    print('\t\t\tfound sub edge indexes', sub_edge_indexes)
+
+    return sub_edge_indexes
+
+
 def vertices_list_to_str(edge):
     vertice_ids = [v.id for v in edge.getVertices()]
 
@@ -45,10 +110,8 @@ def update_denied(denied, edge):
 def get_ends(path, key):
     ends = []
 
-    curr_vertices = None
-    prev_vertices = None
-
     if not len(path):
+        print('\tfound ends', [])
         return []
 
     curr_vertices = path[-1].getVertices()
@@ -58,10 +121,7 @@ def get_ends(path, key):
         if curr_v.id not in prev_vertices:
             ends.append(curr_v.id)
 
-    print('getEnds start')
-    print(path[len(path) - 2].getVertices())
-    print(ends)
-    print('getEnds end')
+    print('\tfound ends', ends)
     return ends
 
 
@@ -223,22 +283,24 @@ class CanvasWidget(QGraphicsView):
 
         for pair in self.pairs:
             print('current pair', self.pairs.index(pair))
+
             for key in pair.keys():
                 for vertex in hg.vertices:
                     if vertex.id is key:
                         vertex.set_as_pairing()
 
                 print('current key', key)
-                path_search = pair[key]
 
-                denied = path_search['denied']
-                paths = path_search['paths']
+                denied = pair[key]['denied']
+                paths = pair[key]['paths']
 
                 print('\tprevious denied', denied)
                 print('\tprevious paths', [[vertices_list_to_str(edge) for edge in path] for path in paths])
 
                 path_indexes_to_remove = []
                 new_paths = []
+
+                next_edges_list = []
 
                 if not len(paths):
                     new_paths = [[next_edge] for next_edge in hg.find_next_edges([key])]
@@ -266,16 +328,49 @@ class CanvasWidget(QGraphicsView):
                             update_denied(denied, first_next_edge)
                             path.append(first_next_edge)
 
+                        print('\ttemp denied', denied)
+                        print('\ttemp paths', [[vertices_list_to_str(edge) for edge in path] for path in paths])
+
                 if len(path_indexes_to_remove):
                     paths = [paths[i] for i in range(len(paths)) if i not in path_indexes_to_remove]
+                    path_indexes_to_remove = []
 
                 paths.extend(new_paths)
+
+                print('\tfound denied', denied)
+                print('\tfound paths', [[vertices_list_to_str(edge) for edge in path] for path in paths])
+
+                last_edges = [path[-1] for path in paths]
+
+                max_edge_order = find_max_edge_order(last_edges)
+
+                if max_edge_order > 2:
+                    print('\tmax edge order', max_edge_order)
+
+                    for i in range(max_edge_order):
+                        order = max_edge_order - i
+
+                        print('\t\tcurrent order', order)
+
+                        super_edges = [edge for (_, edge) in find_edges_with_order(last_edges, order)]
+
+                        print('\t\tedges with current order', super_edges)
+
+                        for super_edge in super_edges:
+                            path_indexes_to_remove.extend(find_sub_edge_indexes(last_edges, super_edge))
+                            print(path_indexes_to_remove)
+                            path_indexes_to_remove = list(set(path_indexes_to_remove))
+
+                        print('\t\tsub edge indexes', path_indexes_to_remove)
+
+                        if len(path_indexes_to_remove):
+                            paths = [paths[j] for j in range(len(paths)) if j not in path_indexes_to_remove]
 
                 pair[key]['paths'] = paths
                 pair[key]['denied'] = denied
 
-                print(denied)
-                print([[vertices_list_to_str(edge) for edge in path] for path in paths])
+                print('\tfinal denied', denied)
+                print('\tfinal paths', [[vertices_list_to_str(edge) for edge in path] for path in paths])
 
                 for path in paths:
                     for edge in path:
