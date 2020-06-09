@@ -7,8 +7,10 @@ from HyperEdge import HyperEdge
 
 from Graphics.CanvasVertex import CanvasVertex
 
+
+# noinspection PyPep8Naming
 class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
-    
+
     def __init__(self, *vertices, **kwargs):
         # TODO redo
 
@@ -21,13 +23,14 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             if type(edge) == HyperEdge:
                 vertices = {CanvasVertex(other=v) for v in edge.getVertices()}
                 HyperEdge.__init__(self, *vertices)
-            else:   
+            else:
                 HyperEdge.__init__(self, other=edge)
+            self.id = edge.id
         else:
             vertices = {CanvasVertex(other=x) for x in vertices}
             HyperEdge.__init__(self, *vertices)
             # HyperEdge.__init__(self, *[CanvasVertex(vertex, self) for vertex in vertices], **kwargs)
-        
+
         self.real_point_gap = 50.
 
         self.default_pen = QtGui.QPen()
@@ -35,6 +38,15 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         self.highlighted_pen = QtGui.QPen()
         self.highlighted_pen.setColor(QtCore.Qt.green)
+
+        # status pens
+        self.protected_pen = QtGui.QPen()
+        self.protected_pen.setColor(QtCore.Qt.blue)
+        self.current_pen = QtGui.QPen()
+        self.current_pen.setColor(QtCore.Qt.magenta)
+        self.found_pen = QtGui.QPen()
+        self.found_pen.setColor(QtCore.Qt.green)
+
 
         self.hovered_pen = QtGui.QPen()
         self.hovered_pen.setColor(QtCore.Qt.red)
@@ -53,18 +65,18 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.setAcceptHoverEvents(True)
         self.multiplicity = 1
 
-    def deleteVertex(self, vertex:CanvasVertex) -> None:
+    def deleteVertex(self, vertex: CanvasVertex) -> None:
         HyperEdge.deleteVertex(self, vertex)
         for vertex in self.vertices:
             if type(vertex) is Vertex:
                 return
         if self.getDegree() > 2:
             self.grahamConvex()
-        
+
         self.draw()
         self.update()
 
-    def equalPositions(self, other_vertices:set) -> bool:
+    def equalPositions(self, other_vertices: set) -> bool:
         for v1 in self.vertices:
             for v2 in other_vertices:
                 if v1 == v2:
@@ -73,14 +85,14 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         return True
 
-    def updateVertices(self, vertices:set):
+    def updateVertices(self, vertices: set):
         if vertices == self.vertices and self.equalPositions(vertices):
             return
 
         self.vertices = {v for v in vertices if v in self.vertices}
         self.grahamConvex()
 
-    def changeVertex(self, vertex:CanvasVertex, change_convex=True) -> None:
+    def changeVertex(self, vertex: CanvasVertex, change_convex=True) -> None:
         self.vertices = {v for v in self.vertices if vertex != v}
         self.vertices.add(vertex)
 
@@ -90,12 +102,12 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
                 self.draw()
 
     def getMultiplicity(self) -> int:
-        return  self.multiplicity
+        return self.multiplicity
 
-    def setMultiplicity(self, m:int) -> None:
+    def setMultiplicity(self, m: int) -> None:
         if self.multiplicity != m:
             self.multiplicity = m
-            self.real_point_gap = 50. + 50.*(self.multiplicity - 1.)
+            self.real_point_gap = 50. + 50. * (self.multiplicity - 1.)
             self.grahamConvex()
             self.draw()
 
@@ -110,7 +122,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
                 bottom_points = [vertex]
             elif vertex.pos().y() == bottom_points[0].pos().y():
                 bottom_points.append(vertex)
-        
+
         if len(bottom_points) == 1:
             p0 = bottom_points[0]
         else:
@@ -122,7 +134,7 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         vertices.remove(p0)
         angles = [p0.polar_angle(v) for v in vertices]
         vertices = zip(vertices, angles)
-        vertices = sorted(vertices, key = lambda x: x[1], reverse=True)
+        vertices = sorted(vertices, key=lambda x: x[1], reverse=True)
 
         # [ print(x.getId()) for x in vertices ]
 
@@ -132,23 +144,23 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             if continue_stack:
                 continue_stack -= 1
                 continue
-            
-            elif angle == vertices[i+1][1]:
+
+            elif angle == vertices[i + 1][1]:
 
                 same_angle_vertices = [vertices[i]]
-                for j, (next_vertex, next_angle) in enumerate(vertices[i+1:], i+1):
+                for j, (next_vertex, next_angle) in enumerate(vertices[i + 1:], i + 1):
                     if next_angle == angle:
                         same_angle_vertices.append(vertices[j])
                     else:
                         break
-                
+
                 same_angle_distances = [p0.distance(v[0]) for v in same_angle_vertices]
                 further_distance = max(same_angle_distances)
                 further_vertex = same_angle_vertices[same_angle_distances.index(further_distance)]
 
                 new_vertices.append(further_vertex)
                 continue_stack = len(same_angle_vertices) - 1
-            else:    
+            else:
                 new_vertices.append(vertices[i])
 
         if not continue_stack:
@@ -165,10 +177,10 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.convex = stack
         self.getSupportConvex()
 
-        return stack 
+        return stack
 
-    def inflateConvex(self, convex:list, gap:float) -> list:
-        convex = [ (convex[i-1], convex[i], convex[(i+1) % len(convex)]) for i in range(len(convex)) ]
+    def inflateConvex(self, convex: list, gap: float) -> list:
+        convex = [(convex[i - 1], convex[i], convex[(i + 1) % len(convex)]) for i in range(len(convex))]
 
         result_convex = []
         for prev, vertex, next in convex:
@@ -177,42 +189,61 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
                 a = CanvasVertex.polar_angle_pos(vertex, v)
                 # a = vertex.polar_angle(v)
                 angles.append(a)
-            angle = sum(angles) /2.
+            angle = sum(angles) / 2.
             # TODO redo
             # new_vertex = CanvasVertex(id = vertex.getId() + '\'')
             new_vertex = QtCore.QPointF(
-                vertex + QtCore.QPointF(gap*cos(angle), gap*sin(angle))
+                vertex + QtCore.QPointF(gap * cos(angle), gap * sin(angle))
             )
             if CanvasVertex.vector_product_pos(prev, vertex, new_vertex) < 0.:
-            # prev.vector_product(vertex, new_vertex) < 0.:
+                # prev.vector_product(vertex, new_vertex) < 0.:
                 angle += pi
                 new_vertex = QtCore.QPointF(
-                    vertex + QtCore.QPointF(gap*cos(angle), gap*sin(angle))
+                    vertex + QtCore.QPointF(gap * cos(angle), gap * sin(angle))
                 )
             result_convex.append(new_vertex)
 
         return result_convex
 
-    def intersectionOfSegmentAndCircle(self, center:QtCore.QPointF, radius:float, p1:QtCore.QPointF, p2:QtCore.QPointF):
+    def intersectionOfSegmentAndCircle(self, center: QtCore.QPointF, radius: float, p1: QtCore.QPointF,
+                                       p2: QtCore.QPointF):
         x0, y0 = center.x(), center.y()
         x1, y1 = p1.x(), p1.y()
         x2, y2 = p2.x(), p2.y()
         r = radius
 
-        intercect1 = ((x0 - x2)*(x1 - x2) + (y0 - y2)*(y1 - y2) - (r**2*((x1 - x2)**2 + (y1 - y2)**2) - (-(x2*y0) - x0*y1 + x2*y1 + x1*(y0 - y2) + x0*y2)**2)**.5) / ((x1 - x2)**2 + (y1 - y2)**2)
-        intercect2 = ((x0 - x2)*(x1 - x2) + (y0 - y2)*(y1 - y2) + (r**2*((x1 - x2)**2 + (y1 - y2)**2) - (-(x2*y0) - x0*y1 + x2*y1 + x1*(y0 - y2) + x0*y2)**2)**.5) / ((x1 - x2)**2 + (y1 - y2)**2)
+        #
 
-        if isclose(intercect1, 1., abs_tol=1e-5) or isclose(intercect1, 0., abs_tol=1e-5):
-            intercect = intercect2
-        else:
-            intercect = intercect1
+        # root_arg = (r ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2) - (
+        #         -(x2 * y0) - x0 * y1 + x2 * y1 + x1 * (y0 - y2) + x0 * y2) ** 2)
+        #
+        # root_arg = 1e-5 if root_arg < 1e-5 else root_arg
+
+        # print(root_arg)
+
+        # intercect1 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) - root_arg ** .5) / (
+        #         (x1 - x2) ** 2 + (y1 - y2) ** 2)
+        # intercect2 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) + root_arg ** .5) / (
+        #         (x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+        # if isinstance(intercect1, complex):
+        #     intercect1 = 0
+        #
+        # if isinstance(intercect2, complex):
+        #     intercect2 = 0
+
+        # if isclose(intercect1, 1., abs_tol=1e-5) or isclose(intercect1, 0., abs_tol=1e-5):
+        #     intercect = intercect2
+        # else:
+        #     intercect = intercect1
 
         # intercect = max([intercect1, intercect2])
         # if abs(intercect) > 1.:
         #     print("Warning!")
         # intercect1 = (p1 + p2) * intercect1
         # intercect2 = (p1 + p2) * intercect2
-        intercect = (p1 * intercect + (1.-intercect) * p2) 
+        # intercect = (p1 * intercect + (1. - intercect) * p2)
+        intercect = (p1 * .5 + (1. - .5) * p2)
 
         return intercect
 
@@ -226,12 +257,12 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             raise Exception()
 
         if not self.isHyperedge():
-            raise Exception("Edge {} is not a hyperedge to create support convex for it!".format(self.getId())) 
-
+            raise Exception("Edge {} is not a hyperedge to create support convex for it!".format(self.getId()))
 
         self.support_convex = self.inflateConvex([v.pos() for v in self.convex], self.real_point_gap)
-        
-        convex = [ (self.support_convex[i], self.support_convex[(i+1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
+
+        convex = [(self.support_convex[i], self.support_convex[(i + 1) % len(self.support_convex)]) for i in
+                  range(len(self.support_convex))]
         # distances = [CanvasVertex.distance_pos(v1, v2) for v1, v2 in convex]
         # self.arc_radius = 2.*max(distances)
 
@@ -248,28 +279,29 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         #     c2 = 3.*(v1 + v2)/4.
         #     cubic1.append(c1)
         #     cubic2.append(c2)
-        
+
         # self.cubic_points = zip(self.inflateConvex(cubic1, 10.), self.inflateConvex(cubic2, 10.))
 
         arc_points = []
-        convex = [ (self.support_convex[i-1], self.support_convex[i], self.support_convex[(i+1) % len(self.support_convex)]) for i in range(len(self.support_convex)) ]
+        convex = [(self.support_convex[i - 1], self.support_convex[i],
+                   self.support_convex[(i + 1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
         for i, (prev, current, next) in enumerate(convex):
             arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, prev, current))
             arc_points.append(current)
             arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, current, next))
 
         self.arc_points = arc_points
-        
+
         return self.arc_points
 
-    def draw(self, support_convex:bool=False):
+    def draw(self, support_convex: bool = False):
         path = QtGui.QPainterPath()
 
         if self.getDegree() == 1:
             point = list(self.getVertices())[0].pos()
             start_angle = -pi / 4.
-            c1 = point + QtCore.QPointF(self.real_point_gap*cos(start_angle), self.real_point_gap*sin(start_angle))
-            start_angle -= pi /2.
+            c1 = point + QtCore.QPointF(self.real_point_gap * cos(start_angle), self.real_point_gap * sin(start_angle))
+            start_angle -= pi / 2.
             c2 = point + QtCore.QPointF(self.real_point_gap * cos(start_angle), self.real_point_gap * sin(start_angle))
             help_point = point + QtCore.QPointF(0, -self.real_point_gap)
             path.moveTo(point)
@@ -288,8 +320,9 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
                 distance = CanvasVertex.distance_pos(p_start, p_finish)
                 base_angle = CanvasVertex.polar_angle_pos(p_start, p_finish)
-                base_angle += pi/2.*(-1)**self.multiplicity
-                c = (p_start + p_finish) / 2. + QtCore.QPointF(distance/2.*self.multiplicity/2.*cos(base_angle), distance/2.*self.multiplicity/2.*sin(base_angle))
+                base_angle += pi / 2. * (-1) ** self.multiplicity
+                c = (p_start + p_finish) / 2. + QtCore.QPointF(distance / 2. * self.multiplicity / 2. * cos(base_angle),
+                                                               distance / 2. * self.multiplicity / 2. * sin(base_angle))
                 path.moveTo(p_start)
                 path.quadTo(c, p_finish)
             else:
@@ -333,21 +366,28 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         # path.cubicTo(cubic1[-1], cubic2[-1], self.support_convex[0])
         # path.closeSubpath()
 
-    #QT reimplimentations
+    # QT reimplimentations
     # def boundingRect(self):
-        
+
     #     if self.isSimpleEdge():
     #         pass
 
     #     return QtWidgets.QGraphicsPathItem.boundingRect(self)
 
-    def setSelected(self, selected:bool):
+    def setSelected(self, selected: bool):
         QtWidgets.QGraphicsPathItem.setSelected(self, selected)
         if selected:
             self.setPen(self.hovered_pen)
         else:
-            self.setPen(self.highlighted_pen if self.highlighted else self.default_pen)
-        
+            if self.status == 'current':
+                self.setPen(self.current_pen)
+            elif self.status == 'protected':
+                self.setPen(self.protected_pen)
+            elif self.status == 'found':
+                self.setPen(self.found_pen)
+            else:
+                self.setPen(self.default_pen)
+
         self.update()
 
     # mouse evnets
@@ -359,25 +399,42 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
     #     self.setSelected(False)
     #     QtWidgets.QGraphicsPathItem.hoverLeaveEvent(self, mouseEvent)
 
-
     # DEPRECATED
     def calculateCenter(self):
         vertices_pos = [v.pos() for v in self.vertices]
         self.center = vertices_pos[0]
         for vertex in vertices_pos[1:]:
             self.center += vertex
-        
+
         return self.center
 
-    def setScore(self, score:int):
+    def setScore(self, score: int):
         self.score = score
-    
+
     def getScore(self):
         return self.score
 
     # Дополнительные методы
 
+    def set_status(self, status = ''):
+        print('set_status {} for edge id {}'.format(status, self.id))
+        if status == 'current':
+            self.status = 'current'
+            self.setPen(self.current_pen)
+        elif status == 'protected':
+            self.status = 'protected'
+            self.setPen(self.protected_pen)
+        elif status == 'found':
+            self.status = 'found'
+            self.setPen(self.found_pen)
+        else:
+            self.status = ''
+            self.setPen(self.default_pen)
+
+        self.update()
+
     def set_as_pairing_search_result(self):
-        self.highlighted = True
-        self.setPen(self.highlighted_pen)
+        # self.highlighted = True
+        self.status = 'current'
+        self.setPen(self.current_pen)
         self.update()

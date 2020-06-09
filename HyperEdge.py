@@ -4,32 +4,36 @@ from uuid import uuid4
 
 from Vertex import Vertex
 
+
 class HyperEdgeCrossingVariants(Enum):
     NOT_CROSSING = auto()
     CROSSING = auto()
     ONE_INSIDE_ANOTHER = auto()
     SAME = auto()
 
+
+# noinspection PyPep8Naming
 class HyperEdge:
 
-    def __init__(self, *vertices, other:HyperEdge=None):
+    def __init__(self, *vertices, other: HyperEdge = None):
         self.id = str(uuid4())
+        self.status = ''
         if other:
             self._copy_constructor(other)
         elif vertices:
             self.vertices = set(vertices)
         else:
             raise ValueError("Vertices set can't be empty")
-        
 
-    def _copy_constructor(self, other:HyperEdge):
+    def _copy_constructor(self, other: HyperEdge):
         self.vertices = other.vertices
+        self.status = other.status
 
     def __str__(self):
         result = "(%s)" % (','.join(map(str, self.vertices)))
         return result
 
-    def __eq__(self, other:HyperEdge):
+    def __eq__(self, other: HyperEdge):
         return self.id == other.id
 
     def __hash__(self):
@@ -44,7 +48,7 @@ class HyperEdge:
     def getDegree(self):
         return len(self.vertices)
 
-    def getCrossingVariant(self, other:HyperEdge) -> HyperEdgeCrossingVariants:
+    def getCrossingVariant(self, other: HyperEdge) -> HyperEdgeCrossingVariants:
         if self.vertices == other.vertices:
             return HyperEdgeCrossingVariants.SAME
 
@@ -56,7 +60,7 @@ class HyperEdge:
         else:
             return HyperEdgeCrossingVariants.CROSSING
 
-    def getCrossingDegree(self, other:HyperEdge) -> int:
+    def getCrossingDegree(self, other: HyperEdge) -> int:
         return len(self.vertices & other.vertices)
 
     def getChildIds(self):
@@ -68,22 +72,22 @@ class HyperEdge:
     def isSimpleEdge(self):
         return self.getDegree() == 2
 
-    def addVertex(self, vertex:Vertex):
+    def addVertex(self, vertex: Vertex):
         self.vertices.add(vertex)
 
-    def deleteVertex(self, vertex:Vertex):
+    def deleteVertex(self, vertex: Vertex):
         self.vertices -= {vertex}
 
-    def renameVertex(self, old_id:str, new_id:str) -> None:
+    def renameVertex(self, old_id: str, new_id: str) -> None:
         # TODO make it work considering that self.vertices is set
         for vertex in self.vertices:
             if vertex.getId() == old_id:
                 vertex.setId(new_id)
                 return
 
-    def compareByVertices(self, other:HyperEdge) -> bool:
-        return  self.getVertices() == other.getVertices()
+    def compareByVertices(self, other: HyperEdge) -> bool:
+        return self.getVertices() == other.getVertices()
 
-    def replaceVertex(self, old:Vertex, new:Vertex):
+    def replaceVertex(self, old: Vertex, new: Vertex):
         self.deleteVertex(old)
         self.addVertex(new)

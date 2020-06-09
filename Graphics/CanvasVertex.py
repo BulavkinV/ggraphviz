@@ -126,7 +126,15 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
 
     def distance(self, other:CanvasVertex):
         vertex = other.pos() - self.pos()
-        return sqrt(vertex.x()**2. + vertex.y()**2.)
+
+        result = None
+
+        try:
+            result = sqrt(vertex.x()**2. + vertex.y()**2.)
+        except:
+            result = 500
+
+        return result
 
     @staticmethod
     def polar_angle_pos(p1:QtCore.QPointF, p2:QtCore.QPointF):
@@ -143,8 +151,15 @@ class CanvasVertex(Vertex, QtWidgets.QGraphicsItem):
     @staticmethod
     def distance_pos(p1:QtCore.QPointF, p2:QtCore.QPointF):
         vertex = p2 - p1
-        return sqrt(vertex.x()**2. + vertex.y()**2.)
 
+        result = None
+
+        try:
+            result = sqrt(vertex.x()**2. + vertex.y()**2.)
+        except:
+            result = 500
+
+        return result
 
 
 

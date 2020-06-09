@@ -3,6 +3,7 @@ from uuid import uuid4
 from Vertex import Vertex
 from HyperEdge import HyperEdge
 
+
 class ComplexVertex(Vertex):
 
     def __init__(self, *vertices):
@@ -15,7 +16,7 @@ class ComplexVertex(Vertex):
         else:
             self.v1 = vertices[0]
             self.v2 = vertices[1]
-        
+
         super().__init__(uuid4())
 
     def toEdge(self):

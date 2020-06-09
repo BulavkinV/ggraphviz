@@ -35,7 +35,10 @@ class HyperGraph():
     def _copy_constructor(self, other:HyperGraph):
         self.vertices = {Vertex(other=v) for v in other.getVertices()}
         self.edges = [HyperEdge(*({v for v in self.vertices if v in e.getVertices()})) for e in other.getEdges()]
-        # self.edges = [HyperEdge(other=e) e in other.getEdges()]
+        for i, edge in enumerate(self.edges):
+            edge.id = other.edges[i].id
+            print(self.edges[i].id, other.edges[i].id)
+        # self.edges = [HyperEdge(other=e) for e in other.getEdges()]
 
     def getVertices(self):
         return self.vertices

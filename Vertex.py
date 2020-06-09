@@ -5,8 +5,10 @@ class Vertex:
     def __init__(self, id:str=None, other:Vertex=None):
         if other:
             self.id = other.id
+            self.status = other.status
         elif id:
             self.id = str(id)
+            self.status = ''
         else:
             raise Exception("ID or other must be provided")
 
