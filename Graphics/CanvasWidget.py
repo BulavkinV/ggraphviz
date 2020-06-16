@@ -37,10 +37,10 @@ def try_to_find_path(pair, node_keys):
     path_b_part = None
 
     for path_a in pair[key_a]['paths']:
-        last_edge = path_a[-1]
+        last_edge_id = path_a[-1].id
 
         for path_b in pair[key_b]['paths']:
-            if last_edge in path_b:
+            if last_edge_id in [edge.id for edge in path_b]:
                 path_a_part = path_a
                 path_b_part = path_b
                 break
@@ -51,6 +51,8 @@ def try_to_find_path(pair, node_keys):
     if path_a_part and path_b_part:
         pair['$path'] = path_a_part[:-1]
         pair['$path'].extend(path_b_part)
+
+    print(pair['$path'])
 
 
 def find_max_edge_order(edges):
@@ -119,9 +121,7 @@ def find_sub_edge_indexes(edges, super_edge):
 
 
 def vertices_list_to_str(edge):
-    vertice_ids = [v.id for v in edge.getVertices()]
-
-    return ','.join(vertice_ids)
+    return ','.join([v.id for v in edge.getVertices()])
 
 
 def update_denied(denied, edge):
@@ -280,7 +280,7 @@ class CanvasWidget(QGraphicsView):
         chg = CanvasHyperGraph(start_hg)
 
         self.cv2_history.append(chg)
-        self.cv2_step += 1
+        self.cv2_step = 0
 
         for canvas_vertex in chg.vertices:
             if canvas_vertex.id in ['a', 'b']:
@@ -307,17 +307,19 @@ class CanvasWidget(QGraphicsView):
         history = self.cv2_history
         step = self.cv2_step
 
-        if step < len(history):
+        if step < len(history) - 1:
+            print('current step', step)
             self.setScene(history[step])
             return
 
         if not history[step - 1]:
+            print('no step found')
             return
 
         hg = CanvasHyperGraph(history[step - 1])
 
-        for edge in hg.edges:
-            edge.set_status()
+        # for edge in hg.edges:
+        #     edge.set_status()
 
         hg_edge_ids = [edge.id for edge in hg.edges]
 
@@ -329,8 +331,15 @@ class CanvasWidget(QGraphicsView):
             try_to_find_path(pair, pair_keys)
 
             if len(pair['$path']):
-                for edge in pair['$path']:
+                path_edge_ids = [edge.id for edge in pair['$path']]
+                hg_path_edges = [edge for edge in hg.edges if edge.id in path_edge_ids]
+                print('\tprotected path', [vertices_list_to_str(edge) for edge in pair['$path']])
+                print('\thg has {}/{} edges'.format(len([edge.id for edge in pair['$path'] if edge.id in hg_edge_ids]), len(pair['$path'])))
+                for edge in hg_path_edges:
                     edge.set_status('protected')
+                    # edge.setPen(edge.protected_pen)
+                    # edge.status = 'protected'
+                    # edge.update()
                 continue
 
             for key in pair_keys:
@@ -431,14 +440,17 @@ class CanvasWidget(QGraphicsView):
         self.cv2_history.append(hg)
         self.cv2_step += 1
 
+        for edge in hg.edges:
+            print(edge.id, edge.status if edge.status else '__')
+
         self.setScene(hg)
 
     def previous_hg2(self):
         history = self.cv2_history
         step = self.cv2_step
 
-        prev_hg = history[step - 2 if step > 1 else 0]
-        self.cv2_step = step - 1 if step > 0 else 0
+        self.cv2_step = step - 1 if step else 0
+        prev_hg = history[self.cv2_step]
 
         self.setScene(prev_hg)
 

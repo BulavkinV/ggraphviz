@@ -47,7 +47,6 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         self.found_pen = QtGui.QPen()
         self.found_pen.setColor(QtCore.Qt.green)
 
-
         self.hovered_pen = QtGui.QPen()
         self.hovered_pen.setColor(QtCore.Qt.red)
 
@@ -214,17 +213,17 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         #
 
-        # root_arg = (r ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2) - (
-        #         -(x2 * y0) - x0 * y1 + x2 * y1 + x1 * (y0 - y2) + x0 * y2) ** 2)
+        root_arg = (r ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2) - (
+                -(x2 * y0) - x0 * y1 + x2 * y1 + x1 * (y0 - y2) + x0 * y2) ** 2)
         #
         # root_arg = 1e-5 if root_arg < 1e-5 else root_arg
 
         # print(root_arg)
 
-        # intercect1 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) - root_arg ** .5) / (
-        #         (x1 - x2) ** 2 + (y1 - y2) ** 2)
-        # intercect2 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) + root_arg ** .5) / (
-        #         (x1 - x2) ** 2 + (y1 - y2) ** 2)
+        intercect1 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) - root_arg ** .5) / (
+                (x1 - x2) ** 2 + (y1 - y2) ** 2)
+        intercect2 = ((x0 - x2) * (x1 - x2) + (y0 - y2) * (y1 - y2) + root_arg ** .5) / (
+                (x1 - x2) ** 2 + (y1 - y2) ** 2)
 
         # if isinstance(intercect1, complex):
         #     intercect1 = 0
@@ -232,18 +231,18 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
         # if isinstance(intercect2, complex):
         #     intercect2 = 0
 
-        # if isclose(intercect1, 1., abs_tol=1e-5) or isclose(intercect1, 0., abs_tol=1e-5):
-        #     intercect = intercect2
-        # else:
-        #     intercect = intercect1
+        if isclose(intercect1, 1., abs_tol=1e-5) or isclose(intercect1, 0., abs_tol=1e-5):
+            intercect = intercect2
+        else:
+            intercect = intercect1
 
         # intercect = max([intercect1, intercect2])
         # if abs(intercect) > 1.:
         #     print("Warning!")
         # intercect1 = (p1 + p2) * intercect1
         # intercect2 = (p1 + p2) * intercect2
-        # intercect = (p1 * intercect + (1. - intercect) * p2)
-        intercect = (p1 * .5 + (1. - .5) * p2)
+        intercect = (p1 * intercect + (1. - intercect) * p2)
+        # intercect = (p1 * .5 + (1. - .5) * p2)
 
         return intercect
 
@@ -282,15 +281,15 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
         # self.cubic_points = zip(self.inflateConvex(cubic1, 10.), self.inflateConvex(cubic2, 10.))
 
-        arc_points = []
-        convex = [(self.support_convex[i - 1], self.support_convex[i],
-                   self.support_convex[(i + 1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
-        for i, (prev, current, next) in enumerate(convex):
-            arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, prev, current))
-            arc_points.append(current)
-            arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, current, next))
+        # arc_points = []
+        # convex = [(self.support_convex[i - 1], self.support_convex[i],
+        #            self.support_convex[(i + 1) % len(self.support_convex)]) for i in range(len(self.support_convex))]
+        # for i, (prev, current, next) in enumerate(convex):
+        #     arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, prev, current))
+        #     arc_points.append(current)
+        #     arc_points.append(self.intersectionOfSegmentAndCircle(self.convex[i], self.real_point_gap, current, next))
 
-        self.arc_points = arc_points
+        self.arc_points = self.support_convex
 
         return self.arc_points
 
@@ -332,19 +331,19 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
             if not self.support_convex:
                 self.grahamConvex()
 
-            path.moveTo(self.arc_points[0])
-            for center, arc_final, next in zip(self.arc_points[1::3], self.arc_points[2::3], self.arc_points[3::3]):
-                path.quadTo(center, arc_final)
-                path.lineTo(next)
+            # path.moveTo(self.arc_points[0])
+            # for center, arc_final, next in zip(self.arc_points[1::3], self.arc_points[2::3], self.arc_points[3::3]):
+            #     path.quadTo(center, arc_final)
+            #     path.lineTo(next)
 
-            path.quadTo(self.arc_points[-2], self.arc_points[-1])
+            # path.quadTo(self.arc_points[-2], self.arc_points[-1])
+            # path.closeSubpath()
+
+            # if support_convex:
+            path.moveTo(self.support_convex[0])
+            for vertex in self.support_convex[1:]:
+                path.lineTo(vertex)
             path.closeSubpath()
-
-            if support_convex:
-                path.moveTo(self.support_convex[0])
-                for vertex in self.support_convex[1:]:
-                    path.lineTo(vertex)
-                path.closeSubpath()
 
         self.setPath(path)
 
@@ -416,25 +415,21 @@ class CanvasHyperEdge(HyperEdge, QtWidgets.QGraphicsPathItem):
 
     # Дополнительные методы
 
-    def set_status(self, status = ''):
+    def set_status(self, status=''):
         print('set_status {} for edge id {}'.format(status, self.id))
         if status == 'current':
             self.status = 'current'
             self.setPen(self.current_pen)
+            self.update()
         elif status == 'protected':
             self.status = 'protected'
             self.setPen(self.protected_pen)
+            self.update()
         elif status == 'found':
             self.status = 'found'
             self.setPen(self.found_pen)
+            self.update()
         else:
             self.status = ''
             self.setPen(self.default_pen)
-
-        self.update()
-
-    def set_as_pairing_search_result(self):
-        # self.highlighted = True
-        self.status = 'current'
-        self.setPen(self.current_pen)
-        self.update()
+            self.update()
